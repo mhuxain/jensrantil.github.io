@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-05-14T22:40:00+02:00</updated><entry><title>That initial blogpost</title><link href="http://jensrantil.github.io/that-initial-blogpost.html" rel="alternate"></link><updated>2013-05-14T22:40:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-14:that-initial-blogpost.html</id><summary type="html">&lt;p&gt;So it's time to kick off this blog. I cheated a little and posted
+&lt;a class="reference external" href="http://jensrantil.github.io/replacing-a-folder-in-subversion.html"&gt;a previously written blog post&lt;/a&gt;.
+It was posted on a personal blog that mostly had Swedish material.&lt;/p&gt;
+&lt;p&gt;My intent with this blog will be to &amp;quot;put a URL on my tech and
+possibly entrepreneurship thoughts, in English&amp;quot;. If you'd like to know
+more about me, check out that brand new &lt;a class="reference external" href="http://jensrantil.github.io/pages/about-jens.html"&gt;About Me&lt;/a&gt; page!&lt;/p&gt;
+</summary></entry><entry><title>Replacing a folder in Subversion</title><link href="http://jensrantil.github.io/replacing-a-folder-in-subversion.html" rel="alternate"></link><updated>2008-09-22T02:17:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2008-09-22:replacing-a-folder-in-subversion.html</id><summary type="html">&lt;p&gt;So you have an external library foo version 1.0 that you have committed
+to your Subversion repository together with your code. Let us for
+simplicity say that your external library is situated in its own folder.&lt;/p&gt;
+&lt;p&gt;One day you realize that there is a new version 2.0 of foo released. You
+download it and since there was a while ago a lot of the file structure
+in the foo project has changed. How can you replace the files in your
+current repository in a good looking fashion?&lt;/p&gt;
+&lt;p&gt;Now you could remove the old foo-library. Commit, and import the new
+version of foo. But for me I always think it's important that a commit
+is correctly reflecting a change. And I would say that upgrading the foo
+library should be done in ONE commit. How do you do this? It turns out
+it's a pretty hard problem and something that does not exist in todays
+Subversion.&lt;/p&gt;
+&lt;p&gt;I solved this by running &lt;tt class="docutils literal"&gt;rsync&lt;/tt&gt; from the new library folder to the old
+library folder, ignoring the &lt;tt class="docutils literal"&gt;.svn&lt;/tt&gt;-folders:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;rsync -vlr --exclude&lt;span class="o"&gt;=&lt;/span&gt;.svn --delete foo_new/ foo_old/
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Executing&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;svn status
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;then gave a me a list of all newly added files (question marks), removed
+files (conflicts/exclamation marks) and changed files (M, as in
+modified). The added files and removed files then manually had to be
+added/removed in my local checkout before committing - something that
+could have been scripted if I wasn't doing this at 2:30 in the morning
+:-)&lt;/p&gt;
+&lt;p&gt;Please comment if you do have a better solution.&lt;/p&gt;
+</summary><category term="svn"></category><category term="subversion"></category></entry></feed>
