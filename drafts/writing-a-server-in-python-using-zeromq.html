@@ -43,23 +43,89 @@
             <section id="content" class="body">
   <header class="post">
     <h2 class="entry-title">
-      That initial blogpost
+      Writing a server in Python using ZeroMQ
     </h2>
   </header>
   <footer class="post-info">
     <abbr>
-      Tis 14 Maj 2013 
+      Mån 13 Maj 2013 
                By <a class="url fn" href="http://jensrantil.github.io/author/jens-rantil.html">Jens Rantil</a>
         
     </abbr>
   </footer><!-- /.post-info -->
   <div class="entry-content">
-    <p>So it's time to kick off this blog. I cheated a little and posted
-<a class="reference external" href="http://jensrantil.github.io/replacing-a-folder-in-subversion.html">a previously written blog post</a>.
-It was posted on a personal blog that mostly had Swedish material.</p>
-<p>My intent with this blog will be to &quot;put a URL on my tech and
-possibly entrepreneurship thoughts, in English&quot;. If you'd like to know
-more about me, check out that brand new <a class="reference external" href="http://jensrantil.github.io/pages/about-jens.html">About Me</a> page!</p>
+    <p><em>This post is partially related to my `previous blog post`_ about
+Rewind_.</em></p>
+<p>One of the questions that might hit you is <em>why would you ever write a
+server in Python?</em>. Coming from a Java background, this is a question
+I've been asking myself and Rewind gave me some time to review this.</p>
+<p>Some of my reasons for choosing Python were:</p>
+<ul class="simple">
+<li>I was tired of slow development feedback from coding in Java.</li>
+<li>I wanted to try out new creative ways to do testing. This involved
+enforcing coding standards through tests and sometimes required some
+introspection.</li>
+<li>I wanted to try out full TDD. There were plenty of Python tools for
+this job, including great <cite>mocking</cite> utilities.</li>
+<li>I've been a big fan of Python for a long time. I wanted to see if it
+stood the test also for heavy backend services.</li>
+<li>Great support for <a class="reference external" href="http://www.zeromq.org">ZeroMQ</a>.</li>
+</ul>
+<p>Would Python stand the test for a rather performant server software? I
+think so.  In Rewind I made the assumption that all events would be
+persisted as one single event stream. Harddrives are great at
+append-only storage and I was not that worried about concurrency. The
+concurrency requirements lay in the fanout message pattern used to
+notify event listeners of newly persisted events. ZeroMQ would deal with
+that very well. This meant I could/would sleep well at night, not
+worrying about the Python <a class="reference external" href="http://wiki.python.org/moin/GlobalInterpreterLock">GIL</a>.</p>
+<div class="section" id="zeromq-patterns">
+<h2>ZeroMQ Patterns</h2>
+<p><a class="reference external" href="http://zguide.zeromq.org/page:all">The ZeroMQ Guide</a> is a great source of inspiration when it comes to
+learning about how to build distributed applications using messaging
+(and ZeroMQ). It not only teaches many of the options you have as a
+developer, but also the fact that doing distributed systems the way
+right is <em>hard</em>.</p>
+<p>The guide became my inspiration. I love problem solving and I was
+thinking hard about which parts could be made asynchronous in an event
+sourced system, and which could not. <cite>Rinat Abdullin</cite>, a big CQRS
+proponent, <a class="reference external" href="https://twitter.com/abdullin/status/291827247210459136">hinted</a> that most his code uses async communication. Still, I
+decided to stick to synchronous writes to the event store.
+Asynchronicity could be added to the write client if needed, I thought.</p>
+<p>The other option would be to have asynchronous writes into the event
+store. However, the write side of CQRS always need to make sure what
+writes are persisted to correctly update its state. One option would be
+to make it an event listener of the event store. My issue with that was
+that bad writes also would have had to published as events. I felt that
+would put to much requirements on future implementations. Maaybe I'm
+wrong...</p>
+</div>
+<div class="section" id="storage-engines">
+<h2>Storage engines</h2>
+<p>Generally, all an event store really needs os a key value store. If fast
+querying is not a requirement, simply an append-only file on disk will
+do. Events are never removed anyway.</p>
+<p>I spent a fair amount of time trying to find a decent key-value store
+for Python, that did not have any external requirements. I wanted to
+minimize the hazzle of installing/compiling 3rd party libraries to use
+Rewind.</p>
+<p>Finding a key-value for Python with those requirements turned out to be
+harder than I thought.</p>
+<p>TODO: Move this to above ZeroMQ Patterns?</p>
+<div class="section" id="concurrency-go-and-where-we-are-today">
+<h3>Concurrency, Go and where we are today</h3>
+<p>After listening to <a class="reference external" href="http://beingtheworst.com">The Being the Worst</a> podcast for some time, it hit
+me that an event store is not simply storing a single global event
+stream. It stores.</p>
+</div>
+<div class="section" id="lessons-learned-and-the-future">
+<h3>Lessons learned and the Future</h3>
+<p>Rewind and its child project Gorewind has definitely spurred an
+interest in me when it comes to DDD. I've spent some time reading about
+the concepts...</p>
+<p>TODO: Write.</p>
+</div>
+</div>
 
   </div><!-- /.entry-content -->
 <div id="disqus_thread"></div>
