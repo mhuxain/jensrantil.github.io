@@ -43,56 +43,72 @@
             <section id="content" class="body">
   <header class="post">
     <h2 class="entry-title">
-      Migrating to Python 3
+      Refreshable AngularjS service
     </h2>
   </header>
   <footer class="post-info">
     <abbr>
-      Sun 19 May 2013 
+      Mon 20 May 2013 
     </abbr>
   </footer><!-- /.post-info -->
   <div class="entry-content">
-    <p>This post is partially related to my <a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html">previous blog post</a> about
-<a class="reference external" href="http://www.github.com/JensRantil/rewind">Rewind</a>.</p>
-<p>I initially started the implementation of Rewind in Python 2.7. I
-constantly kept test coverage to 100%, and I tried to stick to <a class="reference external" href="http://en.wikipedia.org/wiki/Test-driven_development">TDD</a> as
-much as possible.  The Python testing tool <a class="reference external" href="https://nose.readthedocs.org/en/latest/">Nose</a> proved to be very
-valuable, as did <a class="reference external" href="https://travis-ci.org/JensRantil/rewind">Travis CI</a>.</p>
-<p>After some time I thought &quot;Hey, why work in Python 2 when Python 3 seems
-around corner?&quot;. I installed Python 3.2 on my laptop and started
-executing those tests. Travis CI helped a lot here to always make sure
-that Rewind was backward compatible with Python 2.7. Ever nervous about
-a test failing? Make pull request on <a class="reference external" href="http://www.github.com">Github</a> and Travis CI will tell you
-whether the pull request broke something or not. Highly convenient.
-Migration to Python 3 can be summarized in three paragraphs:</p>
-<p><strong>Migrate from lists to iterators.</strong> In many ways I like the changes to the
-built-in functions <tt class="docutils literal">map</tt> and <tt class="docutils literal">reduce</tt>. Working with iterators are in
-many ways a higher abstraction. I did have some code that expected these
-functions to return lists. The flip side was that I sometimes had to
-wrap in list:</p>
-<div class="highlight"><pre><span class="n">variable</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">someiter</span><span class="p">))</span>
-</pre></div>
-<p>In hindsight, I probably should have used <a class="reference external" href="http://docs.python.org/2/tutorial/datastructures.html#list-comprehensions">list comprehensions</a> for
-many of those cases as they are more readable...</p>
-<p><strong>Use the 'bytes' type instead of 'string' where appropriate.</strong>
-<tt class="docutils literal">bytes</tt> was introduced as a new type in Python 3. In the Rewind case,
-this mostly involved ZeroMQ message frames handling, that takes
-<tt class="docutils literal">bytes</tt>. This also involved some conversion to and/or from <tt class="docutils literal">bytes</tt>
-and <tt class="docutils literal">string</tt>. I tried to stick to <tt class="docutils literal"><span class="pre">UTF-8</span></tt> for this.</p>
-<p><strong>Use 'string.format(...)' instead of 'string % ...' pattern.</strong> Nuff
-said.</p>
-<div class="section" id="looking-back">
-<h2>Looking back</h2>
-<p>In general, Python 3 is very backwards compatible (but Python 2 is not
-forward compatible). As far as I can recollect, the only conditionals I
-needed to make Python3 were aliasing of imports:</p>
-<div class="highlight"><pre><span class="k">try</span><span class="p">:</span>
-    <span class="c"># Python &lt; 3</span>
-    <span class="kn">import</span> <span class="nn">ConfigParser</span> <span class="kn">as</span> <span class="nn">configparser</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="c"># Python &gt;= 3</span>
-    <span class="kn">import</span> <span class="nn">configparser</span>
-</pre></div>
+    <p>Lately I've been working a lot in <a href="#id1"><span class="problematic" id="id2">AngularJS_</span></a>. This is my second project
+with the framework, and the more time I spend in it, the more I like it.</p>
+<p>But as with most things, AngularJS has some rough corners.  Its
+<a href="#id3"><span class="problematic" id="id4">documentation_</span></a> still has a long way to go, altough it has improved since
+last time I used it over a year ago. Common use cases and &quot;Angular-y&quot;
+was of doing things is another thing that I also feel is lacking out
+there. I guess it could be considered documentation depending on how you
+look at it.</p>
+<p>My intention with this blog post is to go through one such use case,
+namely dealing with complex dependencies from API endpoints.</p>
+<iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/1/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/2/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/3/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/4/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/5/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/6/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/7/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/8/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/9/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/10/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/11/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/12/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/13/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/14/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/15/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/16/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/17/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><p>Some other:</p>
+<iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/TdykU/2/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/TdykU/3/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><div class="system-messages section">
+<h2>Docutils System Messages</h2>
+<div class="system-message" id="id1">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/jens/Development/src/pelican/content/content/refreshable-angularjs-service.rst</tt>, line 8); <em><a href="#id2">backlink</a></em></p>
+Unknown target name: &quot;angularjs&quot;.</div>
+<div class="system-message" id="id3">
+<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/jens/Development/src/pelican/content/content/refreshable-angularjs-service.rst</tt>, line 11); <em><a href="#id4">backlink</a></em></p>
+Unknown target name: &quot;documentation&quot;.</div>
 </div>
 
   </div><!-- /.entry-content -->
