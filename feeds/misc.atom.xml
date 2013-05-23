@@ -1,5 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-05-19T21:25:00+02:00</updated><entry><title>Migrating to Python 3</title><link href="http://jensrantil.github.io/migrating-to-python-3.html" rel="alternate"></link><updated>2013-05-19T21:25:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-19:migrating-to-python-3.html</id><summary type="html">&lt;p&gt;This post is partially related to my &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;previous blog post&lt;/a&gt; about
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-05-24T00:26:00+02:00</updated><entry><title>AngularJS events on initialization</title><link href="http://jensrantil.github.io/angularjs-events-on-initialization.html" rel="alternate"></link><updated>2013-05-24T00:26:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-24:angularjs-events-on-initialization.html</id><summary type="html">&lt;p&gt;In my &lt;a class="reference external" href="http://jensrantil.github.io/refreshable-angularjs-service.html"&gt;previous post&lt;/a&gt; I was giving an example of using &lt;a class="reference external" href="http://angularjs.org"&gt;AngularJS&lt;/a&gt;
+&lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$emit"&gt;events&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I stumbled across a corner case that might be worth noting; If a service
+is triggering an event on initialization, no controllers will get
+notified of it. Here's an example:&lt;/p&gt;
+&lt;iframe width="100%" height="250"
+src="http://jsfiddle.net/Ztyx/TdykU/2/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;The reason why this is happening is simply because the controller have
+not been instantiated. Setting a timer before emitting the event can be
+done as a workaround:&lt;/p&gt;
+&lt;iframe width="100%" height="250"
+src="http://jsfiddle.net/Ztyx/TdykU/3/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Now you know!&lt;/p&gt;
+</summary><category term="AngularJS"></category><category term="JavaScript"></category></entry><entry><title>Refreshable AngularjS service</title><link href="http://jensrantil.github.io/refreshable-angularjs-service.html" rel="alternate"></link><updated>2013-05-23T22:59:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-23:refreshable-angularjs-service.html</id><summary type="html">&lt;p&gt;Lately I've been working a lot in &lt;a class="reference external" href="http://angularjs.org"&gt;AngularJS&lt;/a&gt;. This is my second project
+with the framework, and the more time I spend in it, the more I like it.&lt;/p&gt;
+&lt;p&gt;But as with most things, AngularJS has some rough corners. Its
+&lt;a class="reference external" href="http://docs.angularjs.org/"&gt;documentation&lt;/a&gt; still has a long way to go, altough it has improved since
+last time I used it over a year ago. Common use cases and &amp;quot;Angular-y&amp;quot;
+was of doing things is another thing that I also feel is lacking out
+there. I guess it could be considered documentation depending on how you
+look at it.&lt;/p&gt;
+&lt;p&gt;My intention with this blog post is to go through one such use case,
+namely dealing with complex dependencies. The clientside application
+that I've been working with lately has a bunch of quite complicated
+dependencies and these JSFiddles turned out to be the perfect way for me
+to flesh out how to deal with the dependencies in an structured fashion.
+Specifically, this post will talk about:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;How to share state between controllers.&lt;/li&gt;
+&lt;li&gt;How update/refresh state between controllers.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The level of this tutorial is &lt;em&gt;intermediate&lt;/em&gt;. I expect you to know basic
+AngularJS; state injection, controllers, about &lt;tt class="docutils literal"&gt;$timeout&lt;/tt&gt; and
+services.&lt;/p&gt;
+&lt;div class="section" id="a-slow-service"&gt;
+&lt;h2&gt;A slow service&lt;/h2&gt;
+&lt;p&gt;Let's say you have some data you would like to present to your user
+and you prepare some data in your controller. In our case, a list:&lt;/p&gt;
+&lt;iframe width="100%" height="150"
+src="http://jsfiddle.net/Ztyx/U9A32/1/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;This is very basic AngularJS and I expect you to have no problems
+understanding the mapping done here.&lt;/p&gt;
+&lt;p&gt;But in the real world, we rarely hardcode things. We are usually
+interested in dynamic data. There are two (major) alternatives to get
+dynamic data into an AngularJS browser application - either generating
+the data into your JS code, or you make an API call to your backend
+after your AngularJS application has loaded. The latter is better if
+your data takes some time to generate. If you have multiple
+dependencies, fetching them asynchronously using multiple HTTP calls
+usually also tend to decrease page loading times.&lt;/p&gt;
+&lt;p&gt;Now, let's create a &lt;a class="reference external" href="http://docs.angularjs.org/guide/dev_guide.services"&gt;service&lt;/a&gt; that simulates a slower API call. It uses a
+&lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$q"&gt;promise&lt;/a&gt; to return an handler that deals with handling asynchronous
+result. Here's the code:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/2/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Notice that it takes a couple of seconds before the result is presented
+on the screen when you click &amp;quot;Result&amp;quot;.&lt;/p&gt;
+&lt;p&gt;Also, it's worth making a mental note that we are storing &lt;em&gt;a promise&lt;/em&gt; to
+the scope. This is not the same as the actual list. AngularJS
+automatically resolves this as the actual returned list and presents it
+in the generated HTML. One issue with saving a promises directly to the
+scope is that you don't handle how to deal with errors if the promise
+could not be resolved. Errors &lt;em&gt;do&lt;/em&gt; happen, and in most cases you are
+better off explicitly dealing with then. Maybe you can simply ignore it?
+Present an error message? Revert to the previous message? This why I
+nowadays usually resolve all my promises like this:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/3/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Obviously, we are not generating any errors here, but you never know!
+;)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="refreshable-data-between-controllers"&gt;
+&lt;h2&gt;Refreshable data between controllers&lt;/h2&gt;
+&lt;p&gt;Let's say we would like share state between controllers. This can be
+done by nesting controllers. Here's a basic example:&lt;/p&gt;
+&lt;iframe width="100%" height="200"
+src="http://jsfiddle.net/Ztyx/U9A32/4/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Now, let's say that we would like this state to to refresh ones in a
+while. Let's simulate an element added:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/5/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;If you click &amp;quot;Result&amp;quot;, you'll notice that the two child controllers are
+not being updated after 3 seconds. That's because their &lt;tt class="docutils literal"&gt;$scope&lt;/tt&gt;
+members only are set when the child controllers are being created. What
+we want is to &lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$watch"&gt;watch&lt;/a&gt; changes made to the list:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/6/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;If you try the code above, you'll notice that it still doesn't work. The
+reason is subtle; &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;$scope.$watch&lt;/span&gt;&lt;/tt&gt; compares object by reference by
+default. This means that it will check to see if &lt;tt class="docutils literal"&gt;$scope.mylist&lt;/tt&gt; is a
+&lt;em&gt;different&lt;/em&gt; array than previously. It is not -- it's simply a modified
+version of that same array. What we want is to compare for &lt;em&gt;object
+equality&lt;/em&gt;. We do that by setting the third parameter to &lt;tt class="docutils literal"&gt;true&lt;/tt&gt; when
+calling &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;$scope.$watch&lt;/span&gt;&lt;/tt&gt;:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/8/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Finally, it works! But, as in the previous example, we want to avoid
+sharing data between controllers through a parent controller. Instead,
+we want to use a service:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/10/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;All good in the hood so far. Now, let's say we would like to support
+refreshing data from our slow API endpoint. Maybe the user has a little
+refresh button, or you'd like the controller to issue a refresh. This is
+where things get a little messy.&lt;/p&gt;
+&lt;p&gt;My first take on this:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/11/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;For simplicity, I've only included a single controller.&lt;/p&gt;
+&lt;p&gt;Notice that my service now returns an object with the function
+&lt;cite&gt;refresh()&lt;/cite&gt; bound to it. The &lt;cite&gt;refresh()&lt;/cite&gt; member function returns a
+new promise every time it's called.&lt;/p&gt;
+&lt;p&gt;Looking at the result we notice that the result is presented correctly.
+However, what's interesting is that &lt;tt class="docutils literal"&gt;$scope.watchCallbackCalls&lt;/tt&gt;
+eventually gets the value &lt;tt class="docutils literal"&gt;4&lt;/tt&gt;. This is because our promise returned
+from &lt;tt class="docutils literal"&gt;refresh()&lt;/tt&gt; actually is modified twice; first when it's returned
+by &lt;tt class="docutils literal"&gt;refresh()&lt;/tt&gt; and secondly when the promise is resolved. Since we
+call &lt;tt class="docutils literal"&gt;refresh()&lt;/tt&gt; twice, our watcher gets called four times. The
+expected number of watch callback calls are obviously 2 calls.&lt;/p&gt;
+&lt;p&gt;How do we overcome this? Instead of using watchers on promises, we
+&lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$on"&gt;can&lt;/a&gt; &lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$emit"&gt;use&lt;/a&gt; &lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$broadcast"&gt;events&lt;/a&gt; when our promises are resolved:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/12/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Each event is triggered with newly fetched list as event argument.&lt;/p&gt;
+&lt;p&gt;Since the service can't access the controller that uses it, we trigger
+events from &lt;tt class="docutils literal"&gt;$rootScope&lt;/tt&gt;. For bigger applications you might
+want to use the calling controller as a parameter to &lt;tt class="docutils literal"&gt;refresh()&lt;/tt&gt; avoid
+bloating the &lt;tt class="docutils literal"&gt;$rootScope&lt;/tt&gt; with too many events (and possibly get
+conflicting event names).&lt;/p&gt;
+&lt;p&gt;Another nice property of using events is that also other services could
+have &lt;tt class="docutils literal"&gt;MySimulatedSlowHTTPService&lt;/tt&gt; as a dependency and automatically
+get triggered when a new result would have been fetched. Making multiple
+HTTP API calls to fetch the same resource would be both a waste of time
+and bandwidth.&lt;/p&gt;
+&lt;p&gt;You can also choosing &lt;em&gt;not&lt;/em&gt; to refresh certain controller scopes on
+refresh. See &lt;tt class="docutils literal"&gt;MyListLengthController&lt;/tt&gt; here:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/13/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;A reason why you would want to do this would be if DOM generation is
+slow and the resource being updated is a large one.&lt;/p&gt;
+&lt;p&gt;One issue with the above solution is that we can't handle the case when
+a refresh fails. A way to remedy this is to use the &lt;tt class="docutils literal"&gt;refresh()&lt;/tt&gt; call's
+&lt;em&gt;promise&lt;/em&gt; instead of the actual resolved result. This moves the
+responsibility of error handling from the service to each dependent
+service/controller/component:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/14/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;Another issue with the above solution is we are partially back to the issue
+we had with watch callback being called multiple times. In this example
+it's because the &lt;tt class="docutils literal"&gt;newList&lt;/tt&gt; event is triggered twice on initialization.
+This can be overcome by not triggering it on the first &lt;tt class="docutils literal"&gt;refresh()&lt;/tt&gt;
+call:&lt;/p&gt;
+&lt;iframe width="100%" height="300"
+src="http://jsfiddle.net/Ztyx/U9A32/17/embedded/"
+allowfullscreen="allowfullscreen" frameborder="0"&gt;&lt;/iframe&gt;&lt;p&gt;I know this became quite a lot of code example. It all grew out of being
+a simple example, but I think this journey is necessary to fully
+understand what considerations goes into making reusable, refreshable,
+services in Angular.&lt;/p&gt;
+&lt;p&gt;Last, but not least, don't just rip my example. Many times you are
+totally fine with a service that simply fetches resource &lt;em&gt;once&lt;/em&gt; per page
+load!&lt;/p&gt;
+&lt;p&gt;Can I do this much simpler? Tell med in the comments.&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="AngularJS"></category><category term="JavaScript"></category></entry><entry><title>Migrating to Python 3</title><link href="http://jensrantil.github.io/migrating-to-python-3.html" rel="alternate"></link><updated>2013-05-19T21:25:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-19:migrating-to-python-3.html</id><summary type="html">&lt;p&gt;This post is partially related to my &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;previous blog post&lt;/a&gt; about
 &lt;a class="reference external" href="http://www.github.com/JensRantil/rewind"&gt;Rewind&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;I initially started the implementation of Rewind in Python 2.7. I
 constantly kept test coverage to 100%, and I tried to stick to &lt;a class="reference external" href="http://en.wikipedia.org/wiki/Test-driven_development"&gt;TDD&lt;/a&gt; as

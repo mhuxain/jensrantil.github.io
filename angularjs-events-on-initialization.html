@@ -43,73 +43,28 @@
             <section id="content" class="body">
   <header class="post">
     <h2 class="entry-title">
-      Refreshable AngularjS service
+      AngularJS events on initialization
     </h2>
   </header>
   <footer class="post-info">
     <abbr>
-      Mon 20 May 2013 
+      Fri 24 May 2013 
     </abbr>
   </footer><!-- /.post-info -->
   <div class="entry-content">
-    <p>Lately I've been working a lot in <a href="#id1"><span class="problematic" id="id2">AngularJS_</span></a>. This is my second project
-with the framework, and the more time I spend in it, the more I like it.</p>
-<p>But as with most things, AngularJS has some rough corners.  Its
-<a href="#id3"><span class="problematic" id="id4">documentation_</span></a> still has a long way to go, altough it has improved since
-last time I used it over a year ago. Common use cases and &quot;Angular-y&quot;
-was of doing things is another thing that I also feel is lacking out
-there. I guess it could be considered documentation depending on how you
-look at it.</p>
-<p>My intention with this blog post is to go through one such use case,
-namely dealing with complex dependencies from API endpoints.</p>
-<iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/1/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/2/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/3/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/4/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/5/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/6/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/7/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/8/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/9/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/10/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/11/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/12/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/13/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/14/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/15/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/16/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
-src="http://jsfiddle.net/Ztyx/U9A32/17/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><p>Some other:</p>
-<iframe width="100%" height="300"
+    <p>In my <a class="reference external" href="http://jensrantil.github.io/refreshable-angularjs-service.html">previous post</a> I was giving an example of using <a class="reference external" href="http://angularjs.org">AngularJS</a>
+<a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$emit">events</a>.</p>
+<p>I stumbled across a corner case that might be worth noting; If a service
+is triggering an event on initialization, no controllers will get
+notified of it. Here's an example:</p>
+<iframe width="100%" height="250"
 src="http://jsfiddle.net/Ztyx/TdykU/2/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><iframe width="100%" height="300"
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><p>The reason why this is happening is simply because the controller have
+not been instantiated. Setting a timer before emitting the event can be
+done as a workaround:</p>
+<iframe width="100%" height="250"
 src="http://jsfiddle.net/Ztyx/TdykU/3/embedded/"
-allowfullscreen="allowfullscreen" frameborder="0"></iframe><div class="system-messages section">
-<h2>Docutils System Messages</h2>
-<div class="system-message" id="id1">
-<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/jens/Development/src/pelican/content/content/refreshable-angularjs-service.rst</tt>, line 8); <em><a href="#id2">backlink</a></em></p>
-Unknown target name: &quot;angularjs&quot;.</div>
-<div class="system-message" id="id3">
-<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/jens/Development/src/pelican/content/content/refreshable-angularjs-service.rst</tt>, line 11); <em><a href="#id4">backlink</a></em></p>
-Unknown target name: &quot;documentation&quot;.</div>
-</div>
+allowfullscreen="allowfullscreen" frameborder="0"></iframe><p>Now you know!</p>
 
   </div><!-- /.entry-content -->
 <div id="disqus_thread"></div>
