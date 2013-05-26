@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-                <title>Jens Rantil's Hideout <small>distributed architecture</small></title>
+                <title>Jens Rantil's Hideout</title>
         <!-- Fonts -->
         <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
         <link href='http://fonts.googleapis.com/css?family=The+Girl+Next+Door' rel='stylesheet' type='text/css'>
@@ -27,10 +27,10 @@
 <body id="index" class="home">
          <div class="navigation">
         <ol class="nav">
-          <li><a href="http://jensrantil.github.io">Blog</a> </li>
+          <li class="current"><a href="http://jensrantil.github.io">Blog</a> </li>
           <li><a href="http://jensrantil.github.io/archives.html">Archive</a></li>
-          <li class="current"><a href="http://jensrantil.github.io/tags.html">Tags</a> </li>
-          <li><a href="http://jensrantil.github.io/">RSS</a> </li>
+          <li><a href="http://jensrantil.github.io/tags.html">Tags</a> </li>
+          <li><a href="">RSS</a> </li>
         </ol>
       </div>
         <header id="banner" class="body">
@@ -40,38 +40,62 @@
                                       <li><a href="http://jensrantil.github.io/pages/about-jens.html">About Jens</a></li>
                           </ul></nav><!-- /#menu -->
         <div class="box">
-                    
-<section id="content">
-<div class="posts">
-    <ol id="post-list">
-            
-        <li>
-            <article class="archive">
-                <header> 
-                    <h2 class="archive-entry-title">
-                        <a href="http://jensrantil.github.io/cqrsevent-sourcing-messaging-patterns.html" rel="bookmark" title="Permalink to CQRS+Event Sourcing Messaging Patterns">CQRS+Event Sourcing Messaging Patterns</a>
-                    </h2> 
-                </header>
-                <footer class="post-info">
-                    <abbr>
-                      Sun 26 May 2013 
-                    </abbr>
-                    <div class="entry-summary"> <p>This post is partially related to my <a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html">previous blog post</a> about
+            <section id="content" class="body">
+  <header class="post">
+    <h2 class="entry-title">
+      ZeroMQ
+    </h2>
+  </header>
+  <footer class="post-info">
+    <abbr>
+      Sat 25 May 2013 
+    </abbr>
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>This post is partially related to my <a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html">previous blog post</a> about
 <a class="reference external" href="http://www.github.com/JensRantil/rewind">Rewind</a> and <a class="reference external" href="http://www.github.com/JensRantil/gorewind">Gorewind</a>.</p>
-<p>Designing a decoupled, message based, system based on the <a class="reference external" href="http://martinfowler.com/bliki/CQRS.html">CQRS</a> pattern
-together with <a class="reference external" href="http://martinfowler.com/eaaDev/EventSourcing.html">event sourcing</a> require some thought. Since I've been
-thinking about it for a while now, I thought I'd share some thoughts ...</p>
-                    <a href="http://jensrantil.github.io/cqrsevent-sourcing-messaging-patterns.html">read more</a></div>
-                </footer><!-- /.post-info -->
-                <!-- /.entry-content -->
-            </article>
-        </li>
-        </ol><!-- /#posts-list -->
-</div>
-<p class="paginator">
-        Page 1 / 1
-    </p>
-</section><!-- /#content -->
+<p>My <a class="reference external" href="http://www.github.com/JensRantil/rewind">Rewind</a> and <a class="reference external" href="http://www.github.com/JensRantil/gorewind">Gorewind</a> implementations both uses <a class="reference external" href="http://www.zeromq.org">ZeroMQ</a>. ZeroMQ is a
+library that enables a programmer to easily send messages between and
+within applications without having a central broker. By using smart
+batching ZeroMQ can achieve very high throughput, while still achieving
+low latency for low frequency messaging.</p>
+<p>The above description is the one usually given about ZeroMQ, but there's
+more to it. ZeroMQ supports a couple of different common messaging
+patterns; filtering pubsub, request/reply and push/pull. These can be
+<a class="reference external" href="http://zguide.zeromq.org/page:all#toc52">combined in various ways</a> to create really various messaging setups.</p>
+<p>The reason why I chose ZeroMQ for Rewind and Gorewind were for a couple
+of different reasons:</p>
+<ul class="simple">
+<li>I wanted Rewind and Gorewind to be used in polyglot environments,
+supporting clients written in multiple programming languages, using
+different platforms. ZeroMQ supports <a class="reference external" href="http://www.aosabook.org/en/zeromq.html#fig.zeromq.joinmessage">a bunch of platforms</a>.</li>
+<li>I did not want to deal with messaging code myself.</li>
+<li>It had a great reference documentation, as well as guide.</li>
+<li>It has a vibrant community that's open for contributions. I was given
+commit access to a Github repository within a day from my first pull
+request!</li>
+<li>I was confident that messaging was not going to be a bottleneck for a
+long time!</li>
+</ul>
+<p><a class="reference external" href="http://zguide.zeromq.org/page:all">The ZeroMQ Guide</a> is a great source of inspiration when it comes to
+learning about how to build distributed applications using messaging
+(and ZeroMQ). It not only teaches many of the options you have as a
+developer, but also the fact that doing distributed systems the right
+way is <em>hard</em>.</p>
+
+  </div><!-- /.entry-content -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'jensrantil'; 
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</section>
             <hr/>
             <footer id="contentinfo" class="footer">
                 <div>

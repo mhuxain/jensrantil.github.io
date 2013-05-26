@@ -1,5 +1,218 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-05-24T00:26:00+02:00</updated><entry><title>AngularJS events on initialization</title><link href="http://jensrantil.github.io/angularjs-events-on-initialization.html" rel="alternate"></link><updated>2013-05-24T00:26:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-24:angularjs-events-on-initialization.html</id><summary type="html">&lt;p&gt;In my &lt;a class="reference external" href="http://jensrantil.github.io/refreshable-angularjs-service.html"&gt;previous post&lt;/a&gt; I was giving an example of using &lt;a class="reference external" href="http://angularjs.org"&gt;AngularJS&lt;/a&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-05-26T23:09:00+02:00</updated><entry><title>CQRS+Event Sourcing Messaging Patterns</title><link href="http://jensrantil.github.io/cqrsevent-sourcing-messaging-patterns.html" rel="alternate"></link><updated>2013-05-26T23:09:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-26:cqrsevent-sourcing-messaging-patterns.html</id><summary type="html">&lt;p&gt;This post is partially related to my &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;previous blog post&lt;/a&gt; about
+&lt;a class="reference external" href="http://www.github.com/JensRantil/rewind"&gt;Rewind&lt;/a&gt; and &lt;a class="reference external" href="http://www.github.com/JensRantil/gorewind"&gt;Gorewind&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Designing a decoupled, message based, system based on the &lt;a class="reference external" href="http://martinfowler.com/bliki/CQRS.html"&gt;CQRS&lt;/a&gt; pattern
+together with &lt;a class="reference external" href="http://martinfowler.com/eaaDev/EventSourcing.html"&gt;event sourcing&lt;/a&gt; require some thought. Since I've been
+thinking about it for a while now, I thought I'd share some thoughts so
+far.&lt;/p&gt;
+&lt;div class="section" id="id1"&gt;
+&lt;h2&gt;CQRS&lt;/h2&gt;
+&lt;p&gt;First let's think about the way information conceptually flows in a CQRS
+system:&lt;/p&gt;
+&lt;blockquote&gt;
+Client issuing a command -&amp;gt; Command -&amp;gt; Command Handler
+-&amp;gt; Event -&amp;gt; Event Listeners/Projections&lt;/blockquote&gt;
+&lt;p&gt;For now, we are not dealing with event sourcing and an event store.&lt;/p&gt;
+&lt;p&gt;Some definitions that will bring this blog post forward:&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;Command&lt;/dt&gt;
+&lt;dd&gt;A data structure instance with a command name in imperative, ex.
+&lt;tt class="docutils literal"&gt;CreateBlogPost&lt;/tt&gt;. Most certainly it contains additional parameters
+such as URL for the blog post and it's text body.&lt;/dd&gt;
+&lt;dt&gt;Command Handler&lt;/dt&gt;
+&lt;dd&gt;The architectural instance that receives commands, checks their
+validitity and converts the command to an &lt;em&gt;event&lt;/em&gt;. A command handler
+is optimized for fast validation/writes. If a command is valid, it
+is then published to all the event listeners that are interested in
+the event. It can also publish errors as events. See &lt;a class="reference internal" href="#asynchronicity-and-feedback-loops"&gt;Asynchronicity
+and feedback loops&lt;/a&gt;. A command handler also guarantees that only a
+single command can modify an &lt;a class="reference external" href="http://en.wikipedia.org/wiki/Domain-driven_design#Building_blocks_of_DDD"&gt;aggregate root&lt;/a&gt; concurrently.&lt;/dd&gt;
+&lt;dt&gt;Event&lt;/dt&gt;
+&lt;dd&gt;Most of the times, an event is the result of a command [1] [2] and is
+named as command, but in past tence. Example: &lt;tt class="docutils literal"&gt;BlogPostCreated&lt;/tt&gt;.
+It is be debatable whether a single command can yield at most one
+event of it's allowed to yield multiple ones.&lt;/dd&gt;
+&lt;dt&gt;Event Listener&lt;/dt&gt;
+&lt;dd&gt;An architectural instance that receives events and does something
+with them. The most common case is to create a projection (for
+example, of blog posts) that quickly can be queried. In terms
+messaging event listeners are usually simply subscribers in a pubsub
+setup.&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;table class="docutils footnote" frame="void" id="id2" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[1]&lt;/td&gt;&lt;td&gt;There are special cases when this is untrue. For example, &lt;em&gt;Sagas&lt;/em&gt;
+might introduce events without a command.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class="docutils footnote" frame="void" id="id3" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[2]&lt;/td&gt;&lt;td&gt;See also &lt;a class="reference internal" href="#asynchronicity-and-feedback-loops"&gt;Asynchronicity and feedback loops&lt;/a&gt;.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="section" id="asynchronicity-and-feedback-loops"&gt;
+&lt;h3&gt;Asynchronicity and feedback loops&lt;/h3&gt;
+&lt;p&gt;The information flow above does not show any feedback loop back to
+&lt;em&gt;Client issuing a command&lt;/em&gt;. The CQRS pattern leaves that feedback loop
+to the implementer. So the question is &lt;strong&gt;how should a client know
+whether a command succeeded or not?&lt;/strong&gt; There are different paths an
+implementer can choose:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Case 1: Command feedback by synchronous validation.&lt;/strong&gt;. The command-issuing
+client sends its command to a command handler. It then waits for the
+command handler to return with &amp;quot;Accepted&amp;quot; or &amp;quot;Failed: &amp;lt;Reason&amp;gt;&amp;quot;. This
+solution is probably the simplest and that CQRS beginners are most
+comfortable with since it is similar to how validation commonly is done
+through HTTP API calls. The downside is that it is synchronous, pushing
+commands might take longer time. More so, there's the choice of having
+another dependence or not.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Case 2: Command feedback by forward event.&lt;/strong&gt; The command-issuing client sends
+its command to a command handler. It immediately receives a &amp;quot;Command
+received&amp;quot; response. The command handler later validates the command. If
+validation passes it generates the expected event(s). If the validation
+fails, an error event (ex. &lt;tt class="docutils literal"&gt;BlogPostCreationFailed&lt;/tt&gt;) is published. The
+client UI can later decide to poll/query for command status, or even
+have the command state pushed out to it (if possible).&lt;/p&gt;
+&lt;p&gt;To be able to query whether a command failed or succeeded the client
+need to have a unique ID for the command. This can be generated either
+by the client or the command handler. The latter obviously will require
+some feedback loop back to client on command invocation. A basic UUID
+will suffice.&lt;/p&gt;
+&lt;p id="case-3"&gt;&lt;strong&gt;Case 3: Command feedback by silence.&lt;/strong&gt; The command-issuing client
+sends its command to a command handler. It immediately receives a
+&amp;quot;Command received&amp;quot; response. In the case of blog post creation, a new
+blog post will show up when the client queries the system for all blog
+posts. If blog creation failed, a new blog post will obviously not show
+up. The downside of this case is that the client has no idea to know
+&lt;em&gt;what&lt;/em&gt; went wrong.&lt;/p&gt;
+&lt;p id="case-4"&gt;&lt;strong&gt;Case 4: Command feedback through a separate workflow.&lt;/strong&gt; In the case of
+using event sourcing, events are persisted. If the command-issuing
+client is one that might trigger a lot of errors, you might not want to
+generate error events in fear of a client generating massive amounts of
+validation errors and filling up the event store. To remedy this, one
+approach would be to create a separate asynchronous pipeline for
+validation errors. An idea would be to populate a cache with validation
+errors and invalidate them with a &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Time_to_live"&gt;TTL&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;There is nothing that says the above cases are mutual exclusive. In
+fact, they can be combined, but as always there will be an increase in
+complexity.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="who-is-client-issuing-command"&gt;
+&lt;h3&gt;Who is &amp;quot;Client issuing command&amp;quot;?&lt;/h3&gt;
+&lt;p&gt;&lt;a class="reference internal" href="#case-4"&gt;Case 4&lt;/a&gt; above brings up another question; &lt;strong&gt;who is &amp;quot;client issuing
+command&amp;quot;?&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;If the client is a customer that creates issues commands through an API, we
+should probably expect more validation errors. Customers usually don't
+have as much domain knowledge as the upstream systems' owner.&lt;/p&gt;
+&lt;p&gt;If the client is simply your own web application's reaction to an HTTP
+request, basic validation can be done in the web application that
+catches 99% of all validation errors. The downside of this is that
+validation logic will partially have to be doubly implemented. If a two
+tier validation is implemented, simply dropping invalid commands (&lt;a class="reference internal" href="#case-3"&gt;case
+3&lt;/a&gt;) might definitely be an option.&lt;/p&gt;
+&lt;p&gt;A variation of having a web application is to have a GUI that only
+enables commands that are possible. Maybe the GUI hinders a user to
+change title of a blog post unless a blog is actually selected. If the
+GUI prohibits 99% of the validation errors, &lt;a class="reference internal" href="#case-3"&gt;case 3&lt;/a&gt; might again be a
+good candidate.&lt;/p&gt;
+&lt;p&gt;A common CQRS question is also how errors immediately are presented when
+a command is issued. The common answer is; They don't. Many CQRS
+proponents argue that 99% of commands will go through, and a GUI should
+simply expect that blog post was published. There are multiple ways to
+later tell the user something went wrong. For web applications, some
+would argue that the user might as well simply reload the webpage to
+update the latest blog posts if something goes wrong. There's a lot to
+say about asynchronous UI, but I think I'm going leave it at that for
+now.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="id4"&gt;
+&lt;h2&gt;Event Sourcing&lt;/h2&gt;
+&lt;p&gt;Adding event sourcing to a CQRS pipeline makes things look something
+like this:&lt;/p&gt;
+&lt;blockquote&gt;
+Client issuing a command -&amp;gt; Command -&amp;gt; Command Handler
+-&amp;gt; Event -&amp;gt; Event Store -&amp;gt; Event Listeners/Projections&lt;/blockquote&gt;
+&lt;p&gt;where an event store persists all events to disk and makes them
+queryable.&lt;/p&gt;
+&lt;p&gt;Most commonly, an event store also handles groups of events so that they
+can be grouped based on &lt;a class="reference external" href="http://en.wikipedia.org/wiki/Domain-driven_design#Building_blocks_of_DDD"&gt;aggregate root&lt;/a&gt;. This makes it possible to
+quickly get up to speed with a certain aggregate root instead of reading
+through all events historically.&lt;/p&gt;
+&lt;p&gt;In &lt;a class="reference internal" href="#asynchronicity-and-feedback-loops"&gt;Asynchronicity and feedback loops&lt;/a&gt; we talked about the feedback
+loop of command validation. Event sourcing brings another architectural
+decisions to the table when it comes to feedback loop from the event
+store:&lt;/p&gt;
+&lt;div class="section" id="failing-disk-writes"&gt;
+&lt;h3&gt;Failing disk writes&lt;/h3&gt;
+&lt;p&gt;Previously we've only dealt with the fact that network could go down.
+Luckily ZeroMQ makes sure that either a messages delivered once fully,
+or not at all.&lt;/p&gt;
+&lt;p&gt;However, introducing an event store yields a new set of issues; writing
+an event store to the disk can fail because the disk is full, or because
+it's broken.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="state-in-consistencies-and-life-cycles"&gt;
+&lt;h3&gt;State (in)consistencies and life cycles&lt;/h3&gt;
+&lt;p&gt;Before we talk about about feedback loops we need to talk about state in
+a CQRS/event-sourced system. Generally state is stored in the following
+parts:&lt;/p&gt;
+&lt;dl class="docutils"&gt;
+&lt;dt&gt;Event handlers/projections&lt;/dt&gt;
+&lt;dd&gt;Receives events and builds state (performing a left fold of the
+events). This state is used for querying and can be thrown away to
+be rebuilt. This is the most recyclable state there is.&lt;/dd&gt;
+&lt;dt&gt;Event store&lt;/dt&gt;
+&lt;dd&gt;Stores all events. Receives events from command handlers.&lt;/dd&gt;
+&lt;dt&gt;Command handlers&lt;/dt&gt;
+&lt;dd&gt;Stores state that is required to make fast validation.&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;From what I've understood, an event store is supposed to be the primary
+source of truth for an event sourced system. I've been fond of this idea
+because it allows for event and command handlers to have short
+lifecycles and come and go by demand, while the central event store can
+sustain long slow lifecycles.&lt;/p&gt;
+&lt;p&gt;Interestingly, there is little online documentation on how command
+handler state is handled in an event sourced CQRS system. So, here are
+some of the different design choices that I've been considering:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Case 1: No dependence.&lt;/strong&gt; Event handlers persists their state fully
+separate from the event store. If anything goes wrong with events being
+persisted, event handler state and event store might become
+inconsistent. This is an inconsistency that might be hard to correct.&lt;/p&gt;
+&lt;p&gt;Also, if command handlers in case 1 uses a relational database, we are
+back to where we started with trying to &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;avoid heavy schema migrations&lt;/a&gt;
+on system upgrade.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Case 2a: Command handler builds state from event stores published
+events.&lt;/strong&gt; Under the assumption that an event store only published events
+that have been persisted, this means that event handler state always
+will be consistent with the event store. It will also allow command
+handlers to easily be upgraded, and easily be sharded if needed.&lt;/p&gt;
+&lt;p&gt;There are two downsides with the solution; Firstly, just like with &lt;a class="reference internal" href="#case-3"&gt;case
+3&lt;/a&gt; no error will be published by the event store in case something
+failed. Choosing a good timeout will be hard/impossible. Secondly, a
+command handler will have to incorporate locking strategies to not allow
+two commands to pass through before the first command's equivalent event
+comes back.&lt;/p&gt;
+&lt;p id="case-2b"&gt;&lt;strong&gt;Case 2b: Command handler builds state from their generated events.&lt;/strong&gt;
+This, too, assures command handler and event store will be consistent,
+are easily upgraded and sharded if needed. If combined with synchronous
+write commands to the event store, the event store can respond with
+&amp;quot;written&amp;quot; or &amp;quot;error&amp;quot;. This makes it possible for the command handler to
+know whether it should apply the event to its internal state or not.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="go-rewind-s-implementation"&gt;
+&lt;h3&gt;(Go)Rewind's implementation&lt;/h3&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://twitter.com/abdullin"&gt;Rinat Abdullin&lt;/a&gt;, a big CQRS proponent, &lt;a class="reference external" href="https://twitter.com/abdullin/status/291827247210459136"&gt;hinted&lt;/a&gt; that most his code uses
+async communication as much as possible. Still, I decided to stick to
+synchronous writes (&lt;a class="reference internal" href="#case-2b"&gt;case 2b&lt;/a&gt;) to the event store for simplicity.
+Asynchronicity could be added to the write client within if needed, I thought.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Heck, rereading this blog post I notice it's a bit unstructured. I hope
+you get the point, though! Feel free to make comments below. I'd love to
+hear you input on this.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</summary><category term="cqrs"></category><category term="event sourcing"></category><category term="distributed architecture"></category></entry><entry><title>AngularJS events on initialization</title><link href="http://jensrantil.github.io/angularjs-events-on-initialization.html" rel="alternate"></link><updated>2013-05-24T00:26:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-24:angularjs-events-on-initialization.html</id><summary type="html">&lt;p&gt;In my &lt;a class="reference external" href="http://jensrantil.github.io/refreshable-angularjs-service.html"&gt;previous post&lt;/a&gt; I was giving an example of using &lt;a class="reference external" href="http://angularjs.org"&gt;AngularJS&lt;/a&gt;
 &lt;a class="reference external" href="http://docs.angularjs.org/api/ng.$rootScope.Scope#$emit"&gt;events&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;I stumbled across a corner case that might be worth noting; If a service
 is triggering an event on initialization, no controllers will get
