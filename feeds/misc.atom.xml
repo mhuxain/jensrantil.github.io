@@ -21,6 +21,10 @@ system.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Without logs, the Internet would be a much less stable and secure place
 to be in.&lt;/p&gt;
+&lt;p&gt;While logs can be used for evil, they can also be used for good. I
+just simply want to point out that the coin has two sides. Sometimes
+talking about how information &lt;em&gt;is&lt;/em&gt; used is more important than &lt;em&gt;what it
+can&lt;/em&gt; be used for.&lt;/p&gt;
 </summary><category term="privacy"></category></entry><entry><title>Line styles in matplotlib</title><link href="http://jensrantil.github.io/line-styles-in-matplotlib.html" rel="alternate"></link><updated>2013-05-28T08:57:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-05-28:line-styles-in-matplotlib.html</id><summary type="html">&lt;p&gt;I'm a big fan of &lt;a class="reference external" href="http://matplotlib.org/"&gt;matplotlib&lt;/a&gt; and tend to use it every time I'd like to
 plot something. A while ago I had a line plot with many lines and ran
 out of default colors. When that happens, matplotlib will reuse the
