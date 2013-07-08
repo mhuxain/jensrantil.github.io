@@ -33,9 +33,9 @@ section#posts a.button_accent:hover{color:#fff;background-color:#0e94ec;outline:
 section#posts a.button_accent:active{color:#fff;background-color:#0e94ec;outline:0}
 section#posts p.paginator{margin:0;padding:0;min-height:122px;width:100%;border-top:#eee 1px solid}
 section#posts .donations,section#posts article{padding:40px 40px 40px 50px;margin:0}
-section#posts .donations{padding-bottom:20px;padding-top:20px;background-color:#eee;color:#333;font-style:italic;line-height:1.5em;transition:color 200ms}
+section#posts .donations{padding-bottom:20px;padding-top:20px;background-color:#eee;color:#333;font-style:italic;line-height:1.5em;transition:color 200ms;-o-transition:color 200ms;-moz-transition:color 200ms;-webkit-transition:color 200ms}
 section#posts .donations:hover{color:#bbb}
-section#posts article{position:relative;font-size:15px;line-height:25px;width:620px;overflow-x:hidden;overflow-y:hidden}section#posts article #title{font-family:'Freight-Sans-Pro','Proxima Nova','Open Sans','Lato',sans-serif;margin:32px 0 0;padding:0;color:#000}section#posts article #title a{border:none}
+section#posts article{position:relative;font-size:15px;line-height:25px;overflow-x:hidden;overflow-y:hidden;width:620px}section#posts article #title{font-family:'Freight-Sans-Pro','Proxima Nova','Open Sans','Lato',sans-serif;margin:32px 0 0;padding:0;color:#000}section#posts article #title a{border:none}
 section#posts article #article_meta{margin:20px 0 0 0;padding:0;font-size:13px;line-height:16px}
 section#posts #comments{margin:0;padding:40px 40px 40px 50px;position:relative;border-top:#eee 1px solid;font-size:15px;line-height:25px;min-height:600px}section#posts #comments h2{color:#000}
 section#posts #disqus_thread{width:600px}
