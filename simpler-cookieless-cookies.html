@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/style.css">
+	<!--<link rel="stylesheet/less" type="text/css" href="/theme/css/style.less">-->
+	<!--<script src="/theme/js/less.js" type="text/javascript"></script>-->
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/pygments.css">
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:800,400,300|Inconsolata' rel='stylesheet' type='text/css'>
+
+	<link href="http://jensrantil.github.io/" type="application/atom+xml" rel="alternate" title="Jens Rantil's Hideout ATOM Feed" />
+	
+	
+			<title>Jens Rantil's Hideout</title>
+		<meta charset="utf-8" />
+	</head>
+<body>
+	<section id="sidebar">
+		<figure id="user_logo">
+            <a href="http://jensrantil.github.io"><div class="logo">&nbsp;</div></a>
+		</figure>
+
+		<div class="user_meta">
+            <h1 id="user"><a href="http://jensrantil.github.io" class="">Jens Rantil</a></h1>
+			<h2></h2>
+						<p class="bio">Swedish/English, fullstack software engineer (<a href="http://www.telavox.se" target="_blank">@Telavox</a>), <a href="http://www.lth.se/english/education/programmes/master_engineering/engineering_mathematics/">MSc in Engineering Mathematics</a>, traveller, nerd, juggler, guitarist, african drum player. Inspired Swede.</p>
+						<ul>
+																			<li><a href="http://jensrantil.github.io/pages/about-jens.html">About Jens</a></li>
+																		<li><a href="http://www.twitter.com/JensRantil">Twitter</a></li>
+									<li><a href="http://www.github.com/JensRantil">Github</a></li>
+							</ul>
+		</div>
+		<footer>
+			<address>
+				Powered by <a href="http://pelican.notmyidea.org/">Pelican</a>,
+		                theme by <a href="https://github.com/wting/pelican-svbtle">wting</a>.
+			</address>
+		</footer>
+	</section>
+
+	<section id="posts">
+			<header>
+		<h1>Jens Rantil's blog</h1>
+		<h3>Posted Sun 18 August 2013</h3>
+	</header>
+	<article>
+		<h1 id="title">
+			<a href="http://jensrantil.github.io/simpler-cookieless-cookies.html" rel="bookmark"
+				title="Permalink to Simpler Cookieless Cookies">Simpler Cookieless Cookies</a>
+		</h1>
+		<p>I recently read the blog article &quot;<a class="reference external" href="http://lucb1e.com/rp/cookielesscookies/">Cookieless Cookies</a>&quot; that talks
+about <a class="reference external" href="https://en.wikipedia.org/wiki/HTTP_ETag#Tracking_using_ETags">using ETag for tracking users</a>. Smart. This is the second
+article I read about obscure ways to store tracking information of a
+user. The first one was about <a class="reference external" href="https://epic.org/privacy/cookies/flash.html">storing Cookie information using Flash</a>.</p>
+<p>Using cookieless tracking is not really something new. While it can be
+fun to read about various advanced way of tracking users, there's been a
+way of doing that without cookies for a long time.</p>
+<div class="section" id="enter-jsessionid">
+<h2>Enter jsessionid</h2>
+<p>Have you ever seen a URL something like</p>
+<blockquote>
+<a class="reference external" href="http://www.example.com/hello/;jsessionid=XXXX">http://www.example.com/hello/;jsessionid=XXXX</a></blockquote>
+<p>where <tt class="docutils literal">XXXX</tt> is a
+code of arbitrary length? <em>jsessionid</em> is the name if the session
+identifier that a couple of Java web servers are using to store the
+unique session identifier that maps the session inbetween requests. In
+the case of <a class="reference external" href="https://tomcat.apache.org/">Tomcat</a>, (by default) it tries to set a cookie with the name
+<tt class="docutils literal">jsessionid</tt>. If it can't, <a class="reference external" href="http://fralef.me/tomcat-disable-jsessionid-in-url.html">it puts the session identifier in the URL
+instead</a>.</p>
+<p>Wait a minute here! We are tracking users without cookies here! Touché.
+While there are all these various complicated ways of tracking a user,
+this is a very simple way of doing it.</p>
+</div>
+<div class="section" id="url-based-tracking">
+<h2>URL based tracking</h2>
+<p>Let's call this &quot;URL based tracking&quot;. The tracking is governed by two
+simple rules:</p>
+<ul class="simple">
+<li><strong>For a new user that does not have a tracking identifier in its
+URL</strong>: Redirect him/her to the exact same URL, but with a unique
+identifier appended to the url.</li>
+<li><strong>For all other page loads</strong>: Make sure that every single <tt class="docutils literal">&lt;a&gt;</tt> tag
+has its <tt class="docutils literal">href</tt> attribute appended with the unique tracking
+identifier.</li>
+</ul>
+<p>As long as all links on <a class="reference external" href="http://www.example.com">http://www.example.com</a> are appended with the
+tracking identifier, we can every single move that a user makes on a
+website. This type of tracking has three specific features that are
+noteworthy:</p>
+<p>First, as opposed to Flash based or cache/Etag based tracking, <em>URL based
+tracking cannot permanently be disabled</em>. Flash can be uninstalled,
+and a cache can be cleared. Sure, a browser plugin could do clientside
+URL replacement, but there are many complicated ways of embedding the
+session identifier in a URL. You could even use a symmetric encryption
+for it.</p>
+<p>Nowadays there are many websites that are using long and complicated
+URLs. They are a perfect case for cookieless tracking. Just look at
+Amazon's URL:s:</p>
+<pre class="literal-block">
+http://www.amazon.com/gp/product/B0083Q04IQ/ref=s9_pop_gw_g424_ir03/183-0559114-0776210?pf_rd_m=ATVPDKIKX0DER&amp;pf_rd_s=center-2&amp;pf_rd_r=18XKAT7PX42T9S5BHAHV&amp;pf_rd_t=101&amp;pf_rd_p=1263340922&amp;pf_rd_i=507846
+</pre>
+<p>Very few visitors would notice if one of these parameters would stay
+unchanged as you would progress from page to page on Amazon. In fact,
+they might even use a cookieless tracking ID already based on the cheer
+number of parameters they have...</p>
+<p>Secondly, for less obscure tracking identifiers in the URL, it's fairly
+easy for a visitor to reset the tracking id. Simply remove it from the
+URL and reload the page. That said, they'll get a new tracking
+identifier set immediately.</p>
+<p>Thirdly, URL based sessions are not persisted between different website
+visits. If you leave
+<tt class="docutils literal"><span class="pre">http://www.example.com/something/;jsessionid=XXXX</span></tt> and come back to
+it, you will loose your tracking id. This obviously means that tracking
+cannot be done between browser restarts.</p>
+</div>
+<div class="section" id="in-summary">
+<h2>In summary</h2>
+<p><strong>For webmasters</strong>: If you'd like to track your visitors that has
+cookies disabled, this is probably the easiest way you can do this.</p>
+<p><strong>For privacy aware users</strong>: Make sure to keep track of what's put in
+your URL! ;)</p>
+</div>
+
+
+		<div id="article_meta">
+							Category:
+					<a href="http://jensrantil.github.io/category/misc.html">misc</a>
+										<br />Tags:
+									<a href="http://jensrantil.github.io/tag/http.html">HTTP</a>
+									</div>
+	</article>
+
+	<div class="donations">
+		Dude, did you like this blog post? Feel free to
+		drop me some bitcoins on
+		<a href="bitcoin:1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v">1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v</a>.
+	</div>
+
+	<footer>
+		<a href="http://jensrantil.github.io/" class="button_accent">&larr;&nbsp;&nbsp;&nbsp;Back to blog</a>
+	</footer>
+
+		<div id="comments">
+		<h2>Comments</h2>
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_identifier = "simpler-cookieless-cookies.html";
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = 'http://jensrantil.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+		<noscript>Please enable JavaScript to view <a href="http://disqus.com/?ref_noscript">comments</a>.</noscript>
+	</div>
+	
+	</section>
+
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+		try {
+			var pageTracker = _gat._getTracker("UA-40929103-1");
+			pageTracker._trackPageview();
+		} catch(err) {}</script>
+</body>
+</html>

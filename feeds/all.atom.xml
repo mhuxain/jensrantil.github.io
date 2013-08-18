@@ -1,5 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-06-17T23:08:00+02:00</updated><entry><title>Privacy and Logging</title><link href="http://jensrantil.github.io/privacy-and-logging.html" rel="alternate"></link><updated>2013-06-17T23:08:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-06-17:privacy-and-logging.html</id><summary type="html">&lt;p&gt;Privacy seem to be a &lt;a class="reference external" href="http://www.guardian.co.uk/world/the-nsa-files"&gt;popular discussion these days&lt;/a&gt;. While I do
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-08-18T22:39:00+02:00</updated><entry><title>Simpler Cookieless Cookies</title><link href="http://jensrantil.github.io/simpler-cookieless-cookies.html" rel="alternate"></link><updated>2013-08-18T22:39:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-18:simpler-cookieless-cookies.html</id><summary type="html">&lt;p&gt;I recently read the blog article &amp;quot;&lt;a class="reference external" href="http://lucb1e.com/rp/cookielesscookies/"&gt;Cookieless Cookies&lt;/a&gt;&amp;quot; that talks
+about &lt;a class="reference external" href="https://en.wikipedia.org/wiki/HTTP_ETag#Tracking_using_ETags"&gt;using ETag for tracking users&lt;/a&gt;. Smart. This is the second
+article I read about obscure ways to store tracking information of a
+user. The first one was about &lt;a class="reference external" href="https://epic.org/privacy/cookies/flash.html"&gt;storing Cookie information using Flash&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Using cookieless tracking is not really something new. While it can be
+fun to read about various advanced way of tracking users, there's been a
+way of doing that without cookies for a long time.&lt;/p&gt;
+&lt;div class="section" id="enter-jsessionid"&gt;
+&lt;h2&gt;Enter jsessionid&lt;/h2&gt;
+&lt;p&gt;Have you ever seen a URL something like&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;a class="reference external" href="http://www.example.com/hello/;jsessionid=XXXX"&gt;http://www.example.com/hello/;jsessionid=XXXX&lt;/a&gt;&lt;/blockquote&gt;
+&lt;p&gt;where &lt;tt class="docutils literal"&gt;XXXX&lt;/tt&gt; is a
+code of arbitrary length? &lt;em&gt;jsessionid&lt;/em&gt; is the name if the session
+identifier that a couple of Java web servers are using to store the
+unique session identifier that maps the session inbetween requests. In
+the case of &lt;a class="reference external" href="https://tomcat.apache.org/"&gt;Tomcat&lt;/a&gt;, (by default) it tries to set a cookie with the name
+&lt;tt class="docutils literal"&gt;jsessionid&lt;/tt&gt;. If it can't, &lt;a class="reference external" href="http://fralef.me/tomcat-disable-jsessionid-in-url.html"&gt;it puts the session identifier in the URL
+instead&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Wait a minute here! We are tracking users without cookies here! Touché.
+While there are all these various complicated ways of tracking a user,
+this is a very simple way of doing it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="url-based-tracking"&gt;
+&lt;h2&gt;URL based tracking&lt;/h2&gt;
+&lt;p&gt;Let's call this &amp;quot;URL based tracking&amp;quot;. The tracking is governed by two
+simple rules:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;For a new user that does not have a tracking identifier in its
+URL&lt;/strong&gt;: Redirect him/her to the exact same URL, but with a unique
+identifier appended to the url.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;For all other page loads&lt;/strong&gt;: Make sure that every single &lt;tt class="docutils literal"&gt;&amp;lt;a&amp;gt;&lt;/tt&gt; tag
+has its &lt;tt class="docutils literal"&gt;href&lt;/tt&gt; attribute appended with the unique tracking
+identifier.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;As long as all links on &lt;a class="reference external" href="http://www.example.com"&gt;http://www.example.com&lt;/a&gt; are appended with the
+tracking identifier, we can every single move that a user makes on a
+website. This type of tracking has three specific features that are
+noteworthy:&lt;/p&gt;
+&lt;p&gt;First, as opposed to Flash based or cache/Etag based tracking, &lt;em&gt;URL based
+tracking cannot permanently be disabled&lt;/em&gt;. Flash can be uninstalled,
+and a cache can be cleared. Sure, a browser plugin could do clientside
+URL replacement, but there are many complicated ways of embedding the
+session identifier in a URL. You could even use a symmetric encryption
+for it.&lt;/p&gt;
+&lt;p&gt;Nowadays there are many websites that are using long and complicated
+URLs. They are a perfect case for cookieless tracking. Just look at
+Amazon's URL:s:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+http://www.amazon.com/gp/product/B0083Q04IQ/ref=s9_pop_gw_g424_ir03/183-0559114-0776210?pf_rd_m=ATVPDKIKX0DER&amp;amp;pf_rd_s=center-2&amp;amp;pf_rd_r=18XKAT7PX42T9S5BHAHV&amp;amp;pf_rd_t=101&amp;amp;pf_rd_p=1263340922&amp;amp;pf_rd_i=507846
+&lt;/pre&gt;
+&lt;p&gt;Very few visitors would notice if one of these parameters would stay
+unchanged as you would progress from page to page on Amazon. In fact,
+they might even use a cookieless tracking ID already based on the cheer
+number of parameters they have...&lt;/p&gt;
+&lt;p&gt;Secondly, for less obscure tracking identifiers in the URL, it's fairly
+easy for a visitor to reset the tracking id. Simply remove it from the
+URL and reload the page. That said, they'll get a new tracking
+identifier set immediately.&lt;/p&gt;
+&lt;p&gt;Thirdly, URL based sessions are not persisted between different website
+visits. If you leave
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;http://www.example.com/something/;jsessionid=XXXX&lt;/span&gt;&lt;/tt&gt; and come back to
+it, you will loose your tracking id. This obviously means that tracking
+cannot be done between browser restarts.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="in-summary"&gt;
+&lt;h2&gt;In summary&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;For webmasters&lt;/strong&gt;: If you'd like to track your visitors that has
+cookies disabled, this is probably the easiest way you can do this.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;For privacy aware users&lt;/strong&gt;: Make sure to keep track of what's put in
+your URL! ;)&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="HTTP"></category></entry><entry><title>Privacy and Logging</title><link href="http://jensrantil.github.io/privacy-and-logging.html" rel="alternate"></link><updated>2013-06-17T23:08:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-06-17:privacy-and-logging.html</id><summary type="html">&lt;p&gt;Privacy seem to be a &lt;a class="reference external" href="http://www.guardian.co.uk/world/the-nsa-files"&gt;popular discussion these days&lt;/a&gt;. While I do
 think it's a very very important topic to discuss, I sometimes feel
 there's not enough people who stand up and argue for cases when there's
 a reason to store data.&lt;/p&gt;
