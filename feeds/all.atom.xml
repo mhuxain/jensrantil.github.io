@@ -1,5 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-08-21T09:53:00+02:00</updated><entry><title>Writing a server in Python</title><link href="http://jensrantil.github.io/writing-a-server-in-python.html" rel="alternate"></link><updated>2013-08-21T09:53:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-21:writing-a-server-in-python.html</id><summary type="html">&lt;p&gt;&lt;em&gt;This post is partially related to my `previous blog post`_ about
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-08-22T00:52:00+02:00</updated><entry><title>Java's missing optional keyword and the issues of null</title><link href="http://jensrantil.github.io/javas-missing-optional-keyword-and-the-issues-of-null.html" rel="alternate"></link><updated>2013-08-22T00:52:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-22:javas-missing-optional-keyword-and-the-issues-of-null.html</id><summary type="html">&lt;p&gt;One of my pet peaves when it comes to the Java programming languages [1]
+is that it does not do enough &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Type_safety"&gt;type safety&lt;/a&gt;. The issue is, simply, that
+programmers tend to believe that Java infers more safety than it
+actually does. The biggest reason for this can be summarized in one
+word; &lt;tt class="docutils literal"&gt;null&lt;/tt&gt;.&lt;/p&gt;
+&lt;table class="docutils footnote" frame="void" id="id1" rules="none"&gt;
+&lt;colgroup&gt;&lt;col class="label" /&gt;&lt;col /&gt;&lt;/colgroup&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td class="label"&gt;[1]&lt;/td&gt;&lt;td&gt;Can be replaced by most other statically typed language; such as
+C, C++.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Let's face it, we've all experienced a &lt;tt class="docutils literal"&gt;NullPointerException&lt;/tt&gt; or two.
+Why? Because we focus so much on which variable type to use. This makes
+us tend to forget the simple fact that the variable might not have a
+value at all; It can be &lt;tt class="docutils literal"&gt;null&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Let's stop for a moment and think; In general, how many times should a
+variables and parameters be nullable vs. non-nullable? I'm not looking
+for an exact number here, but I'm sure you agree that most of your
+method parameters are expected to be non-null. Heck, they need that
+parameter to do what they are expected to execute. Still, they are
+nullable.&lt;/p&gt;
+&lt;p&gt;This is interesting, because most Java code I've seen goes against the
+common notion of requiring a parameter (or variable). I see two gaps:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;the gap between the number of non-null expected parameters and the number of times they are actually documented to be non-nullable.&lt;/li&gt;
+&lt;li&gt;the gap between the number of non-null expected parameters and the
+number of times that the method actually makes sure that they are not
+&lt;tt class="docutils literal"&gt;null&lt;/tt&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Now, this is the time you might say &amp;quot;well, you've just been reading
+lousy Java code&amp;quot;. I say, &amp;quot;don't blame the messenger, this is because the
+Java language is broken&amp;quot;. I think that it's unrealistic that nullability
+needs to be documented and checked for every parameter I add to a
+method; I think it should be an inherent part of every programming
+language to be explicit about optional values, because they are less
+common.&lt;/p&gt;
+&lt;div class="section" id="patching-the-java-language"&gt;
+&lt;h2&gt;Patching the Java language&lt;/h2&gt;
+&lt;p&gt;One way to close this gap would be to introduce an &lt;tt class="docutils literal"&gt;optional&lt;/tt&gt; keyword
+to Java. All parameters &lt;em&gt;without&lt;/em&gt; this keyword would not be allowed to
+be nullable. If they happened to be, a &lt;tt class="docutils literal"&gt;NullPointerException&lt;/tt&gt;
+would get thrown.&lt;/p&gt;
+&lt;p&gt;For example, the call&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;describe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;My description&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;describe&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="n"&gt;optional&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;would throw an &lt;cite&gt;NullPointerException&lt;/cite&gt; saying &amp;quot;name is not  allowed to be null.&amp;quot;&lt;/p&gt;
+&lt;p&gt;Obviously this would not be a backward compatible change and is never
+gonna happen.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="a-workaround-for-a-broken-language"&gt;
+&lt;h2&gt;A workaround for a broken language&lt;/h2&gt;
+&lt;p&gt;A couple of months ago I was recommended to have a look at &lt;a class="reference external" href="https://code.google.com/p/guava-libraries/"&gt;Google
+Guava&lt;/a&gt; by &lt;a class="reference external" href="https://twitter.com/rwalker"&gt;Robby Walker&lt;/a&gt; at &lt;a class="reference external" href="http://www.cueup.com"&gt;Cue&lt;/a&gt;. I stumbled across the &lt;a class="reference external" href="https://code.google.com/p/guava-libraries/wiki/UsingAndAvoidingNullExplained#Optional"&gt;Optional&lt;/a&gt;
+implementation, and at first completely misunderstood what is was. This
+was a good thing, because I instead came up with what I wanted it to be;
+an immutable non-nullable wrapper.&lt;/p&gt;
+&lt;p&gt;My misunderstanding got me thinking and earlier today I &lt;a class="reference external" href="https://gist.github.com/JensRantil/6294289"&gt;sketched out&lt;/a&gt;
+an initial implementation of what I though would be able to solve some
+of the gaps mentioned earlier in this article. Here's the full
+implementation:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Map&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;java.util.Set&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt; * An immutable object reference that may not be null.&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;p&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * This class has two purposes:&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;ul&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;li&amp;gt;it adds a clearly documents the fact that a variable must not be&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;code&amp;gt;null&amp;lt;/code&amp;gt;.&amp;lt;/li&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;li&amp;gt;it helps users to catch possible {@link NullPointerException}s as early&lt;/span&gt;
+&lt;span class="cm"&gt; * as possible in the value chain.&amp;lt;/li&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;li&amp;gt;it minimizes the risk of forgetting to check for null values in&lt;/span&gt;
+&lt;span class="cm"&gt; * constructors.&amp;lt;/li&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;/ul&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;p&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * {@link NullPointerException}s are a misery in Java. Sadly, we have to live&lt;/span&gt;
+&lt;span class="cm"&gt; * with them and the best thing to deal with them is doing it as early as&lt;/span&gt;
+&lt;span class="cm"&gt; * possible in code. This class aims to help you with this.&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;p&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * A note on immutability: This class i immutable/final because is keeps&lt;/span&gt;
+&lt;span class="cm"&gt; * hashCode and equals methods to always return the same result throughout the&lt;/span&gt;
+&lt;span class="cm"&gt; * life cycle of an instance. This makes is possible to have&lt;/span&gt;
+&lt;span class="cm"&gt; * {@link NonNullable}s in {@link Map}s and {@link Set}s etc.&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; *&lt;/span&gt;
+&lt;span class="cm"&gt; * @author Jens Rantil &amp;lt;jens.rantil@gmail.com&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; *&lt;/span&gt;
+&lt;span class="cm"&gt; * @param &amp;lt;V&amp;gt; the type of the real value to hold&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+&lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kd"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;NonNullable&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;V&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt;     * The real value that this class wraps.&lt;/span&gt;
+&lt;span class="cm"&gt;     */&lt;/span&gt;
+    &lt;span class="kd"&gt;private&lt;/span&gt; &lt;span class="n"&gt;V&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt;     * Contruct a {@link NonNullable} immutable.&lt;/span&gt;
+&lt;span class="cm"&gt;     * @param initialValue the actual value. Must (duh!) be non-null.&lt;/span&gt;
+&lt;span class="cm"&gt;     * @throws NullPointerException if initialValue is null.&lt;/span&gt;
+&lt;span class="cm"&gt;     */&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;NonNullable&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;V&lt;/span&gt; &lt;span class="n"&gt;initialValue&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;initialValue&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nf"&gt;NullPointerException&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Must not be null: &amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;initialValue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;());&lt;/span&gt;
+        &lt;span class="o"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;initialValue&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt;     * Get the actual non-null value.&lt;/span&gt;
+&lt;span class="cm"&gt;     * @return value of type V. Never null.&lt;/span&gt;
+&lt;span class="cm"&gt;     */&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;V&lt;/span&gt; &lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt;     * Returns the (unmodified) {@link String} representation of the current&lt;/span&gt;
+&lt;span class="cm"&gt;     * value.&lt;/span&gt;
+&lt;span class="cm"&gt;     *&lt;/span&gt;
+&lt;span class="cm"&gt;     * @return a string.&lt;/span&gt;
+&lt;span class="cm"&gt;     */&lt;/span&gt;
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt; &lt;span class="nf"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;toString&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt;     * Returns a hash code value for the wrapped value object.&lt;/span&gt;
+&lt;span class="cm"&gt;     * @see java.lang.Object#hashCode()&lt;/span&gt;
+&lt;span class="cm"&gt;     */&lt;/span&gt;
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;hashCode&lt;/span&gt;&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;hashCode&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+    &lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt;     * Indicates whether some other object is &amp;quot;equal to&amp;quot; the wrapped value&lt;/span&gt;
+&lt;span class="cm"&gt;     * object.&lt;/span&gt;
+&lt;span class="cm"&gt;     * @see java.lang.Object#equals(java.lang.Object)&lt;/span&gt;
+&lt;span class="cm"&gt;     */&lt;/span&gt;
+    &lt;span class="nd"&gt;@Override&lt;/span&gt;
+    &lt;span class="kd"&gt;public&lt;/span&gt; &lt;span class="kt"&gt;boolean&lt;/span&gt; &lt;span class="nf"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Object&lt;/span&gt; &lt;span class="n"&gt;obj&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="n"&gt;obj&lt;/span&gt;&lt;span class="o"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;}&lt;/span&gt;
+
+&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The class makes it possible to document/infer non-nullability by type.
+It also makes it possible to quickly catch most of the invalid &lt;tt class="docutils literal"&gt;null&lt;/tt&gt;
+values early on since they an exception is thrown in its exception.&lt;/p&gt;
+&lt;p&gt;The class obviously has some limitations:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;A &lt;tt class="docutils literal"&gt;NonNullable&lt;/tt&gt; instance can too be null. However, I still think the
+advantages outweighs the disadvantages.&lt;/li&gt;
+&lt;li&gt;It can be slightly more cumbersome to extract the value from a
+&lt;tt class="docutils literal"&gt;NonNullable&lt;/tt&gt; as you need to use the &lt;tt class="docutils literal"&gt;get()&lt;/tt&gt; method.&lt;/li&gt;
+&lt;li&gt;Instantiation of &lt;tt class="docutils literal"&gt;NonNullable&lt;/tt&gt; can be slow. This is mostly a guess,
+though.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="additional-notes"&gt;
+&lt;h2&gt;Additional notes&lt;/h2&gt;
+&lt;p&gt;The &lt;a class="reference external" href="http://www.haskell.org"&gt;Haskell&lt;/a&gt; programming language has &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Monad_(functional_programming)#The_Maybe_monad"&gt;the Maybe monad&lt;/a&gt; that handles
+this issue precisely the way I'd like other programming languages to do.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;What do you think? Is this something that could be useful? Is null
+even an issue in Java? Please comment below.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="java"></category><category term="programming"></category></entry><entry><title>Writing a server in Python</title><link href="http://jensrantil.github.io/writing-a-server-in-python.html" rel="alternate"></link><updated>2013-08-21T09:53:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-21:writing-a-server-in-python.html</id><summary type="html">&lt;p&gt;&lt;em&gt;This post is partially related to my `previous blog post`_ about
 Rewind_.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;One of the questions that might hit you is &lt;em&gt;why would you ever write a
 server in Python?&lt;/em&gt;. I've heard many people being raising their concerns
