@@ -1,5 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-08-18T22:39:00+02:00</updated><entry><title>Simpler Cookieless Cookies</title><link href="http://jensrantil.github.io/simpler-cookieless-cookies.html" rel="alternate"></link><updated>2013-08-18T22:39:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-18:simpler-cookieless-cookies.html</id><summary type="html">&lt;p&gt;I recently read the blog article &amp;quot;&lt;a class="reference external" href="http://lucb1e.com/rp/cookielesscookies/"&gt;Cookieless Cookies&lt;/a&gt;&amp;quot; that talks
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-08-21T09:53:00+02:00</updated><entry><title>Writing a server in Python</title><link href="http://jensrantil.github.io/writing-a-server-in-python.html" rel="alternate"></link><updated>2013-08-21T09:53:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-21:writing-a-server-in-python.html</id><summary type="html">&lt;p&gt;&lt;em&gt;This post is partially related to my `previous blog post`_ about
+Rewind_.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;One of the questions that might hit you is &lt;em&gt;why would you ever write a
+server in Python?&lt;/em&gt;. I've heard many people being raising their concerns
+when it comes to Python. The biggest ones are obviously concurrency and
+the &lt;a class="reference external" href="http://wiki.python.org/moin/GlobalInterpreterLock"&gt;GIL&lt;/a&gt;. I've also heard arguments related to lack of strict typing,
+that Java has better IDE support (partially due to...strict typing) and
+the sheer amount of libraries that other languages, such as Java, has.&lt;/p&gt;
+&lt;p&gt;Coming from mostly a Java background when it comes to bigger systems,
+this is a question I've been asking myself too and Rewind gave me some
+time to review this. Some of my reasons for choosing Python (mostly, as
+opposed to Java) were:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;I was tired of slow development feedback from coding in Java. Starting
+the JVM takes ages. If you've ever been developing for a runtime
+environment that boots fast, you know what I'm talking about. I've seen
+the light and slow development tools kills me.&lt;/li&gt;
+&lt;li&gt;I wanted to try out new creative ways to do testing. This involved
+enforcing coding standards through tests that sometimes required some
+introspection.&lt;/li&gt;
+&lt;li&gt;I wanted to try out full TDD. There were plenty of Python tools for
+this job, including great &lt;cite&gt;mocking&lt;/cite&gt; utilities.&lt;/li&gt;
+&lt;li&gt;I've been a big fan of Python for a long time. I wanted to see if it
+stood the test also for server backend services.&lt;/li&gt;
+&lt;li&gt;Requiring all code to reside in classes is...ridiculous:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Not all methods requires state and my personal opinion is that
+functional paradigm is easier for beginning programmers to
+understand. Not to mention that functional style of programming
+easily can encapsulate, too, in its own way.&lt;/li&gt;
+&lt;li&gt;Proper object oriented desing is &lt;em&gt;hard&lt;/em&gt; and takes practise. Sadly,
+most programmers have never read the &lt;a class="reference external" href="http://www.amazon.com/Design-Patterns-Elements-Reusable-Object-Oriented/dp/0201633612"&gt;Gang of Four book&lt;/a&gt; and while
+beginner's Java books try to describe concepts such as encapsulation,
+polymorphism etc. the books don't really make a good job of
+explaining them. The simple concepts are easy.  Designing APIs and
+bigger applications is hard. It's taken me a long time and I'm still
+making mistakes.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Great support for &lt;a class="reference external" href="http://www.zeromq.org"&gt;ZeroMQ&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Would Python stand the test for a rather performant server software? I
+think so.  In Rewind's case I made the assumption that all events would
+be persisted as one single event stream. Harddrives are great at
+append-only storage and I was not that worried about concurrency. The
+concurrency requirements lay in the fanout message pattern used to
+notify event listeners of newly persisted events. ZeroMQ would deal with
+that very well. This meant I could/would sleep well at night, not
+worrying about the Python &lt;a class="reference external" href="http://wiki.python.org/moin/GlobalInterpreterLock"&gt;GIL&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="section" id="with-great-server-comes-great-responsibility"&gt;
+&lt;h2&gt;With great server comes great responsibility&lt;/h2&gt;
+&lt;p&gt;The above said, a server requires strict testing to make sure you can be
+confident that server works as expected. Since Python is a dynamically
+types language, this puts an extra pressure on testing. Using test
+coverage as a metric is almost must.&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="python"></category><category term="java"></category></entry><entry><title>Simpler Cookieless Cookies</title><link href="http://jensrantil.github.io/simpler-cookieless-cookies.html" rel="alternate"></link><updated>2013-08-18T22:39:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-18:simpler-cookieless-cookies.html</id><summary type="html">&lt;p&gt;I recently read the blog article &amp;quot;&lt;a class="reference external" href="http://lucb1e.com/rp/cookielesscookies/"&gt;Cookieless Cookies&lt;/a&gt;&amp;quot; that talks
 about &lt;a class="reference external" href="https://en.wikipedia.org/wiki/HTTP_ETag#Tracking_using_ETags"&gt;using ETag for tracking users&lt;/a&gt;. Smart. This is the second
 article I read about obscure ways to store tracking information of a
 user. The first one was about &lt;a class="reference external" href="https://epic.org/privacy/cookies/flash.html"&gt;storing Cookie information using Flash&lt;/a&gt;.&lt;/p&gt;
