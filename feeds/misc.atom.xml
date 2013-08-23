@@ -200,10 +200,7 @@ introspection.&lt;/li&gt;
 this job, including great &lt;cite&gt;mocking&lt;/cite&gt; utilities.&lt;/li&gt;
 &lt;li&gt;I've been a big fan of Python for a long time. I wanted to see if it
 stood the test also for server backend services.&lt;/li&gt;
-&lt;li&gt;Requiring all code to reside in classes is...ridiculous:&lt;/li&gt;
-&lt;/ul&gt;
-&lt;blockquote&gt;
-&lt;ul class="simple"&gt;
+&lt;li&gt;Requiring all code to reside in classes is...ridiculous:&lt;ul&gt;
 &lt;li&gt;Not all methods requires state and my personal opinion is that
 functional paradigm is easier for beginning programmers to
 understand. Not to mention that functional style of programming
@@ -216,8 +213,7 @@ explaining them. The simple concepts are easy.  Designing APIs and
 bigger applications is hard. It's taken me a long time and I'm still
 making mistakes.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;ul class="simple"&gt;
+&lt;/li&gt;
 &lt;li&gt;Great support for &lt;a class="reference external" href="http://www.zeromq.org"&gt;ZeroMQ&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Would Python stand the test for a rather performant server software? I
@@ -233,7 +229,7 @@ worrying about the Python &lt;a class="reference external" href="http://wiki.pyt
 &lt;p&gt;The above said, a server requires strict testing to make sure you can be
 confident that server works as expected. Since Python is a dynamically
 types language, this puts an extra pressure on testing. Using test
-coverage as a metric is almost must.&lt;/p&gt;
+coverage as a metric is almost a must.&lt;/p&gt;
 &lt;/div&gt;
 </summary><category term="python"></category><category term="java"></category></entry><entry><title>Simpler Cookieless Cookies</title><link href="http://jensrantil.github.io/simpler-cookieless-cookies.html" rel="alternate"></link><updated>2013-08-18T22:39:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-18:simpler-cookieless-cookies.html</id><summary type="html">&lt;p&gt;I recently read the blog article &amp;quot;&lt;a class="reference external" href="http://lucb1e.com/rp/cookielesscookies/"&gt;Cookieless Cookies&lt;/a&gt;&amp;quot; that talks
 about &lt;a class="reference external" href="https://en.wikipedia.org/wiki/HTTP_ETag#Tracking_using_ETags"&gt;using ETag for tracking users&lt;/a&gt;. Smart. This is the second
