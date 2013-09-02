@@ -1,5 +1,232 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-08-22T00:52:00+02:00</updated><entry><title>Java's missing optional keyword and the issues of null</title><link href="http://jensrantil.github.io/javas-missing-optional-keyword-and-the-issues-of-null.html" rel="alternate"></link><updated>2013-08-22T00:52:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-22:javas-missing-optional-keyword-and-the-issues-of-null.html</id><summary type="html">&lt;p&gt;One of my pet peaves when it comes to the Java programming languages [1]
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-09-02T22:49:00+02:00</updated><entry><title>Bootstrapping: CouchDB as event store</title><link href="http://jensrantil.github.io/bootstrapping-couchdb-as-event-store.html" rel="alternate"></link><updated>2013-09-02T22:49:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-09-02:bootstrapping-couchdb-as-event-store.html</id><summary type="html">&lt;p&gt;I've previously written about &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;what event sourcing is&lt;/a&gt;. Reading about
+it, you might think &amp;quot;heck, sounds great! But how do I get started?&amp;quot;.
+This blog post will propose a simple way.&lt;/p&gt;
+&lt;div class="section" id="a-minimum-viable-product"&gt;
+&lt;h2&gt;A Minimum Viable Product&lt;/h2&gt;
+&lt;p&gt;The concept of a &lt;a class="reference external" href="http://en.wikipedia.org/wiki/Minimum_viable_product"&gt;minimum viable product&lt;/a&gt; states that you shouldn't do
+more than absolutely necessary before releasing a product.  You need to
+release it when it's just good enough. If it's received badly, you
+haven't invested too much time or energy into it.&lt;/p&gt;
+&lt;p&gt;So, how can you get started with event sourcing quickly and without
+spending a lot of time coding an event store? Here are a couple of options:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Use an append-only log file for the events. This has the advantage of
+being simple. The downside is that querying it slow (requires seeking
+it) and code to build state need to be handled fairly manually. It
+also means that you would have to handle checksumming and backup of
+data etc. yourself.&lt;/li&gt;
+&lt;li&gt;Have a look at &lt;a class="reference external" href="http://www.geteventstore.com"&gt;EventStore&lt;/a&gt;. It's a .NET event store that has both a
+hosted commercial as well as an open source implementation.&lt;/li&gt;
+&lt;li&gt;Consider using an RDBMS. RDBMSes do not, in general, have any type of
+notification framework for database changes/events. So either, it
+would be up to you to poll the database, or you would have to use some
+external notification framework (RabbitMQ etc.).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Recently I've been curious to see whether &lt;a class="reference external" href="http://couchdb.apache.org"&gt;CouchDB&lt;/a&gt; holds true as
+a viable event store database. Event sourcing involves creating
+projections from events and CouchDB's incremental map/reduce &lt;em&gt;views&lt;/em&gt;
+sounded like a natural fit for this.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="requirements"&gt;
+&lt;h2&gt;Requirements&lt;/h2&gt;
+&lt;p&gt;The following were my requirements:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Be able to store events as &lt;strong&gt;incremental&lt;/strong&gt; state changes f various
+aggregate roots.&lt;/li&gt;
+&lt;li&gt;Be able to store events as &lt;strong&gt;unstructured data&lt;/strong&gt;. By that I mean they
+need to support various fields depending on event type.&lt;/li&gt;
+&lt;li&gt;Query capabilities:&lt;ol class="upperroman"&gt;
+&lt;li&gt;Be able to easily &lt;strong&gt;query event chronologically grouped by aggregate
+root&lt;/strong&gt;. This would make it possible to create various timelines on
+an aggregate root basis.&lt;/li&gt;
+&lt;li&gt;Be able to easily &lt;strong&gt;query events chronologically independently of
+aggregate roots&lt;/strong&gt;. Together with &amp;quot;Listen to database changes&amp;quot; below,
+this would make it possible to build up complex states in external
+systems.&lt;/li&gt;
+&lt;li&gt;Quickly create &lt;strong&gt;prototypical projections&lt;/strong&gt;. This would make it
+possible to quickly query current state based on previous events.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Listen for database changes.&lt;/strong&gt; This would enable me to push
+changes out to interested parties, as opposed to needing to poll.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;Support &lt;strong&gt;atomic writes&lt;/strong&gt;. This is important to make sure that among
+concurrent writes of events, always only one will win.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="section" id="a-tentative-implementation"&gt;
+&lt;h2&gt;A tentative implementation&lt;/h2&gt;
+&lt;p&gt;So far I've been able to come up with an implementation that supports
+all of the above requirements using CouchDB.&lt;/p&gt;
+&lt;p&gt;Let's look at three possible events for a simple adressbook:&lt;/p&gt;
+&lt;script src="https://gist.github.com/JensRantil/6416970.js"&gt;&lt;/script&gt;&lt;div class="section" id="atomic-writes-and-unique-indexes-in-couchdb"&gt;
+&lt;h3&gt;Atomic writes and unique indexes in CouchDB&lt;/h3&gt;
+&lt;p&gt;Consider the top level event properties:&lt;/p&gt;
+&lt;div class="section" id="id-and-aggregatetype"&gt;
+&lt;h4&gt;_id and aggregateType&lt;/h4&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;_id&lt;/tt&gt; contains three pieces of information separated by a colon (&lt;tt class="docutils literal"&gt;:&lt;/tt&gt;).&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Aggregate root type.&lt;/li&gt;
+&lt;li&gt;Aggregate root identifier.&lt;/li&gt;
+&lt;li&gt;Aggregate root version.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Let's look about them individually. To simplify, I'll start with the
+version:&lt;/p&gt;
+&lt;p&gt;In event sourcing, an aggregate root moves from one version to another.
+Each event increases the version of the aggregate root. While &lt;em&gt;type&lt;/em&gt; and
+&lt;em&gt;identifier&lt;/em&gt; are immutable throughout the life cycle of an aggregate
+root, version numbering is incremented. This means that concurrent
+writes to a database can be done optimistically, failing only if a write
+with the same &lt;tt class="docutils literal"&gt;_id&lt;/tt&gt; was done previously.&lt;/p&gt;
+&lt;p&gt;The aggregate version is put at the end for increased readability of
+&lt;tt class="docutils literal"&gt;_id&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;If you intend to use CouchDB views to create projections of your events,
+each event need to be specific to an aggregate type. There are multiple ways
+of doing this:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;using an aggregate type field.&lt;/strong&gt; Simply setting
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;doc.aggregateType='contact'&lt;/span&gt;&lt;/tt&gt; for every event. This is a bit
+cumbersome and makes it harder to see what type an event happened to.
+The good thing is that a lot of disk space can be saved on this.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;prepending the aggregate root with a type, like in the example
+above.&lt;/strong&gt; While this would increase readability what the aggregate type
+the event is all about, it would increase the database size a fair
+amount. I have seen recommendations on the web to try to keep the
+&lt;tt class="docutils literal"&gt;_id&lt;/tt&gt; small.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;make sure that every ``doc.event.type`` has a unique mapping to an
+aggregate type.&lt;/strong&gt; The event type &lt;tt class="docutils literal"&gt;contactCreated&lt;/tt&gt; would obviously
+map to a contact. This solution would probably backfire eventually.
+I'd rather have an event type called &lt;tt class="docutils literal"&gt;cescriptionChanged&lt;/tt&gt; instead of
+&lt;tt class="docutils literal"&gt;contactDescriptionChanged&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;having a single CouchDB-database for every aggregate type.&lt;/strong&gt; To keep
+the database in sync, I strongly suggest against this.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The aggregate type is put as the first part to easily distinguish what
+event type we are working with when looking at events.&lt;/p&gt;
+&lt;p&gt;Inbetween the aggregate type and the version specifier, a unique
+identifier is stored. It is unique throughout the lifetime of the
+aggregate root.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="globalid"&gt;
+&lt;h4&gt;globalId&lt;/h4&gt;
+&lt;p&gt;globalId is an orderable ID that makes it possible to traverse through
+the global order of events. In my examples I've used &lt;a class="reference external" href="http://docs.python.org/2/library/uuid.html#uuid.uuid1"&gt;type 1 UUIDs&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="event"&gt;
+&lt;h4&gt;event&lt;/h4&gt;
+&lt;p&gt;Holds the data that describes the event. &lt;cite&gt;event.type&lt;/cite&gt; also contains a
+string describing what type of event it is.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="meta"&gt;
+&lt;h4&gt;meta&lt;/h4&gt;
+&lt;p&gt;This is a property not strictly related to the specific event, but
+information that can be used for debugability. Examples are timestamps,
+which client published the event, which user did it etc. The latter is
+great information to create a highly auditable system.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="event-projection-views"&gt;
+&lt;h3&gt;Event projection views&lt;/h3&gt;
+&lt;p&gt;Using the previously described event schema, CouchDB's map/reduced based
+views can be used to create most simple cases of projections:&lt;/p&gt;
+&lt;p&gt;Here's a design document that keeps track of the description of a
+person:&lt;/p&gt;
+&lt;script src="https://gist.github.com/JensRantil/6417018.js"&gt;&lt;/script&gt;&lt;p&gt;The secret sauce here is to use the aggregate root to to decide whether
+to update the reduce state or not.&lt;/p&gt;
+&lt;p&gt;What a view cannot do is keep track of older versions of an aggregate
+root. This requires building state in an external application that tracks
+database changes. Good news is that this is fairly easy to do as CouchDB
+ships with a &lt;a class="reference external" href="http://guide.couchdb.org/draft/notifications.html"&gt;changes API&lt;/a&gt;. This makes it easy for an external
+application to easily track state as events are being published.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="handling-replication-conflicts"&gt;
+&lt;h3&gt;Handling replication conflicts&lt;/h3&gt;
+&lt;p&gt;One of CouchDB's unique selling points is &lt;em&gt;master-to-master
+replication&lt;/em&gt;. There's some cool stuff that this enables you to do. For
+example you can easily implement syncing clients using libraries such as
+&lt;a class="reference external" href="http://pouchdb.com"&gt;PouchDB&lt;/a&gt; and &lt;a class="reference external" href="http://labs.couchbase.com/TouchDB-iOS/"&gt;TouchDB&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Sadly, master-master replication comes with a cost; namely the fact
+that it's possible that there can be replication conflicts if two or
+more CouchDB instances changes a document and then sync. CouchDB uses
+&lt;a class="reference external" href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control"&gt;MVCC&lt;/a&gt; and automagically chooses a winner. Sometimes this might not be
+the right winner. This happens you can &lt;a class="reference external" href="http://guide.couchdb.org/draft/conflicts.html"&gt;tell CouchDB that you
+prefer another winner&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;My example implementation above would not handle write conflicts very
+well. It would be able to fix a basic conflict like this:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+1 -&amp;gt; 2 --&amp;gt; 3a
+       \
+        -&amp;gt; 3b
+&lt;/pre&gt;
+&lt;p&gt;However, if a series of multiple events would conflict, it would be
+impossible to recreate the different event history paths that might have
+occured. The following conflicting events:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+1 -&amp;gt; 2 --&amp;gt; 3a -&amp;gt; 4a
+       \
+        -&amp;gt; 3b -&amp;gt; 4b
+&lt;/pre&gt;
+&lt;p&gt;could mean either of these histories:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+1 -&amp;gt; 2 -&amp;gt; 3a -&amp;gt; 4a
+1 -&amp;gt; 2 -&amp;gt; 3a -&amp;gt; 4b
+1 -&amp;gt; 2 -&amp;gt; 3b -&amp;gt; 4a
+1 -&amp;gt; 2 -&amp;gt; 3b -&amp;gt; 4b
+&lt;/pre&gt;
+&lt;p&gt;This could be problematic, as CouchDB could choose a corrupt event
+history. Picking one event from one CouchDB source, and another event
+from another CouchDB instance's line of history.&lt;/p&gt;
+&lt;p&gt;To remedy this, I would incorporate a &lt;tt class="docutils literal"&gt;prevRevision&lt;/tt&gt; property for
+every event. Every version of a CouchDB document would have a revision
+that changes every time the document changes. By always refering to the
+previous revision you would essentially have a single-linked history,
+similar to the way &lt;a class="reference external" href="http://git-scm.com"&gt;GIT&lt;/a&gt; works with its SHA-1's.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="other-advantages-of-couchdb"&gt;
+&lt;h2&gt;Other advantages of CouchDB&lt;/h2&gt;
+&lt;p&gt;I've always been fond of CouchDB's different approach to dealing with
+things as opposed to other databases. Here are a couple of other things
+that are worthwhile to know about:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;Crash friendliness.&lt;/strong&gt; CouchDB uses an append-only file for it's
+data. To restore used up space a &lt;em&gt;compaction&lt;/em&gt; need to take place. It's
+up the database maintainer to decide when a compaction happens. This
+append-only architecture means that CouchDB can crash at any time. In
+fact, the normal way to shut down CouchDB is simply to kill it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;BigCouch.&lt;/strong&gt; BigCouch is a CouchDB proxy that sits in front of
+multiple CouchDB instances. It mirrors the CouchDB REST API as close
+as possible, but transparently uses real CouchDB instances as
+backends. This makes it possible to store huge amounts of data in
+CouchDB. The flipside is that &lt;a class="reference external" href="https://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Reduce_vs_rereduce"&gt;rereduce&lt;/a&gt; steps in a view always need to
+take place in in BigCouch (which is usually not a problem).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;strong&gt;Commercial solutions&lt;/strong&gt;, such as &lt;a class="reference external" href="http://www.cloudant.com"&gt;Cloudant&lt;/a&gt; and &lt;a class="reference external" href="http://www.iriscouch.com"&gt;IrisCouch&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="an-implementation"&gt;
+&lt;h2&gt;An implementation&lt;/h2&gt;
+&lt;p&gt;I've started on an implementation of all of this, but I'm still trying
+to figure out if it's too over-engineered or not :). Until then, I'll
+keep it unpublished. Keep a lookout of &lt;a class="reference external" href="http://www.github.com/JensRantil"&gt;my Github account&lt;/a&gt; to see when
+it shows up!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="future-improvements"&gt;
+&lt;h2&gt;Future improvements&lt;/h2&gt;
+&lt;p&gt;CouchDB has claimed to be &amp;quot;a a database for the web&amp;quot;. It talks HTTP and
+there's been numerous libraries that makes it possible to host a full
+web application in a CouchDB instance. The means that CouchDB would
+fully replace the classical web server (Apache, nginx etc.) setup.&lt;/p&gt;
+&lt;p&gt;Recently I've been trying to wrap my head around how &lt;a class="reference external" href="http://blog.mattwoodward.com/2012/03/definitive-guide-to-couchdb.html"&gt;authorization
+works in CouchDB&lt;/a&gt;, especially when it comes to dealing with design
+documents. I'm not entirely sure it would be possible to expose the
+whole event store directly to the Internet. However, if this would be
+doable with correct authorization it would allow some cool stuff such as
+fully hosting event stored applications in CouchDB, possibly together
+with &lt;a class="reference external" href="http://pouchdb.com"&gt;PouchDB&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="cqrs"></category><category term="distributed-architecture"></category></entry><entry><title>Java's missing optional keyword and the issues of null</title><link href="http://jensrantil.github.io/javas-missing-optional-keyword-and-the-issues-of-null.html" rel="alternate"></link><updated>2013-08-22T00:52:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-22:javas-missing-optional-keyword-and-the-issues-of-null.html</id><summary type="html">&lt;p&gt;One of my pet peaves when it comes to the Java programming languages [1]
 is that it does not do enough &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Type_safety"&gt;type safety&lt;/a&gt;. The issue is, simply, that
 programmers tend to believe that Java infers more safety than it
 actually does. The biggest reason for this can be summarized in one
@@ -176,8 +403,8 @@ this issue precisely the way I'd like other programming languages to do.&lt;/p&g
 &lt;p&gt;&lt;em&gt;What do you think? Is this something that could be useful? Is null
 even an issue in Java? Please comment below.&lt;/em&gt;&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="java"></category><category term="programming"></category></entry><entry><title>Writing a server in Python</title><link href="http://jensrantil.github.io/writing-a-server-in-python.html" rel="alternate"></link><updated>2013-08-21T09:53:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-21:writing-a-server-in-python.html</id><summary type="html">&lt;p&gt;&lt;em&gt;This post is partially related to my `previous blog post`_ about
-Rewind_.&lt;/em&gt;&lt;/p&gt;
+</summary><category term="java"></category><category term="programming"></category></entry><entry><title>Writing a server in Python</title><link href="http://jensrantil.github.io/writing-a-server-in-python.html" rel="alternate"></link><updated>2013-08-21T09:53:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-21:writing-a-server-in-python.html</id><summary type="html">&lt;p&gt;This post is partially related to my &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;previous blog post&lt;/a&gt; about
+&lt;a class="reference external" href="http://www.github.com/JensRantil/rewind"&gt;Rewind&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;One of the questions that might hit you is &lt;em&gt;why would you ever write a
 server in Python?&lt;/em&gt;. I've heard many people being raising their concerns
 when it comes to Python. The biggest ones are obviously concurrency and

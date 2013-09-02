@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/style.css">
+	<!--<link rel="stylesheet/less" type="text/css" href="/theme/css/style.less">-->
+	<!--<script src="/theme/js/less.js" type="text/javascript"></script>-->
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/pygments.css">
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:800,400,300|Inconsolata' rel='stylesheet' type='text/css'>
+
+	<link href="http://jensrantil.github.io/" type="application/atom+xml" rel="alternate" title="Jens Rantil's Hideout ATOM Feed" />
+	
+	
+			<title>Jens Rantil's Hideout</title>
+		<meta charset="utf-8" />
+	</head>
+<body>
+	<section id="sidebar">
+		<figure id="user_logo">
+            <a href="http://jensrantil.github.io"><div class="logo">&nbsp;</div></a>
+		</figure>
+
+		<div class="user_meta">
+            <h1 id="user"><a href="http://jensrantil.github.io" class="">Jens Rantil</a></h1>
+			<h2></h2>
+						<p class="bio">Swedish/English, fullstack software engineer (<a href="http://www.telavox.se" target="_blank">@Telavox</a>), <a href="http://www.lth.se/english/education/programmes/master_engineering/engineering_mathematics/">MSc in Engineering Mathematics</a>, traveller, nerd, juggler, guitarist, african drum player. Inspired Swede.</p>
+						<ul>
+																			<li><a href="http://jensrantil.github.io/pages/about-jens.html">About Jens</a></li>
+																		<li><a href="http://www.twitter.com/JensRantil">Twitter</a></li>
+									<li><a href="http://www.github.com/JensRantil">Github</a></li>
+									<li><a href="http://www.linkedin.com/in/jensrantil">LinkedIn</a></li>
+							</ul>
+		</div>
+		<footer>
+			<address>
+				Powered by <a href="http://pelican.notmyidea.org/">Pelican</a>,
+		                theme by <a href="https://github.com/wting/pelican-svbtle">wting</a>.
+			</address>
+		</footer>
+	</section>
+
+	<section id="posts">
+			<header>
+		<h1>Jens Rantil's blog</h1>
+		<h3>Posted Mon 02 September 2013</h3>
+	</header>
+	<article>
+		<h1 id="title">
+			<a href="http://jensrantil.github.io/bootstrapping-couchdb-as-event-store.html" rel="bookmark"
+				title="Permalink to Bootstrapping: CouchDB as event store">Bootstrapping: CouchDB as event store</a>
+		</h1>
+		<p>I've previously written about <a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html">what event sourcing is</a>. Reading about
+it, you might think &quot;heck, sounds great! But how do I get started?&quot;.
+This blog post will propose a simple way.</p>
+<div class="section" id="a-minimum-viable-product">
+<h2>A Minimum Viable Product</h2>
+<p>The concept of a <a class="reference external" href="http://en.wikipedia.org/wiki/Minimum_viable_product">minimum viable product</a> states that you shouldn't do
+more than absolutely necessary before releasing a product.  You need to
+release it when it's just good enough. If it's received badly, you
+haven't invested too much time or energy into it.</p>
+<p>So, how can you get started with event sourcing quickly and without
+spending a lot of time coding an event store? Here are a couple of options:</p>
+<ul class="simple">
+<li>Use an append-only log file for the events. This has the advantage of
+being simple. The downside is that querying it slow (requires seeking
+it) and code to build state need to be handled fairly manually. It
+also means that you would have to handle checksumming and backup of
+data etc. yourself.</li>
+<li>Have a look at <a class="reference external" href="http://www.geteventstore.com">EventStore</a>. It's a .NET event store that has both a
+hosted commercial as well as an open source implementation.</li>
+<li>Consider using an RDBMS. RDBMSes do not, in general, have any type of
+notification framework for database changes/events. So either, it
+would be up to you to poll the database, or you would have to use some
+external notification framework (RabbitMQ etc.).</li>
+</ul>
+<p>Recently I've been curious to see whether <a class="reference external" href="http://couchdb.apache.org">CouchDB</a> holds true as
+a viable event store database. Event sourcing involves creating
+projections from events and CouchDB's incremental map/reduce <em>views</em>
+sounded like a natural fit for this.</p>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements</h2>
+<p>The following were my requirements:</p>
+<ol class="arabic simple">
+<li>Be able to store events as <strong>incremental</strong> state changes f various
+aggregate roots.</li>
+<li>Be able to store events as <strong>unstructured data</strong>. By that I mean they
+need to support various fields depending on event type.</li>
+<li>Query capabilities:<ol class="upperroman">
+<li>Be able to easily <strong>query event chronologically grouped by aggregate
+root</strong>. This would make it possible to create various timelines on
+an aggregate root basis.</li>
+<li>Be able to easily <strong>query events chronologically independently of
+aggregate roots</strong>. Together with &quot;Listen to database changes&quot; below,
+this would make it possible to build up complex states in external
+systems.</li>
+<li>Quickly create <strong>prototypical projections</strong>. This would make it
+possible to quickly query current state based on previous events.</li>
+<li><strong>Listen for database changes.</strong> This would enable me to push
+changes out to interested parties, as opposed to needing to poll.</li>
+</ol>
+</li>
+<li>Support <strong>atomic writes</strong>. This is important to make sure that among
+concurrent writes of events, always only one will win.</li>
+</ol>
+</div>
+<div class="section" id="a-tentative-implementation">
+<h2>A tentative implementation</h2>
+<p>So far I've been able to come up with an implementation that supports
+all of the above requirements using CouchDB.</p>
+<p>Let's look at three possible events for a simple adressbook:</p>
+<script src="https://gist.github.com/JensRantil/6416970.js"></script><div class="section" id="atomic-writes-and-unique-indexes-in-couchdb">
+<h3>Atomic writes and unique indexes in CouchDB</h3>
+<p>Consider the top level event properties:</p>
+<div class="section" id="id-and-aggregatetype">
+<h4>_id and aggregateType</h4>
+<p><tt class="docutils literal">_id</tt> contains three pieces of information separated by a colon (<tt class="docutils literal">:</tt>).</p>
+<ul class="simple">
+<li>Aggregate root type.</li>
+<li>Aggregate root identifier.</li>
+<li>Aggregate root version.</li>
+</ul>
+<p>Let's look about them individually. To simplify, I'll start with the
+version:</p>
+<p>In event sourcing, an aggregate root moves from one version to another.
+Each event increases the version of the aggregate root. While <em>type</em> and
+<em>identifier</em> are immutable throughout the life cycle of an aggregate
+root, version numbering is incremented. This means that concurrent
+writes to a database can be done optimistically, failing only if a write
+with the same <tt class="docutils literal">_id</tt> was done previously.</p>
+<p>The aggregate version is put at the end for increased readability of
+<tt class="docutils literal">_id</tt>.</p>
+<p>If you intend to use CouchDB views to create projections of your events,
+each event need to be specific to an aggregate type. There are multiple ways
+of doing this:</p>
+<ul class="simple">
+<li><strong>using an aggregate type field.</strong> Simply setting
+<tt class="docutils literal"><span class="pre">doc.aggregateType='contact'</span></tt> for every event. This is a bit
+cumbersome and makes it harder to see what type an event happened to.
+The good thing is that a lot of disk space can be saved on this.</li>
+<li><strong>prepending the aggregate root with a type, like in the example
+above.</strong> While this would increase readability what the aggregate type
+the event is all about, it would increase the database size a fair
+amount. I have seen recommendations on the web to try to keep the
+<tt class="docutils literal">_id</tt> small.</li>
+<li><strong>make sure that every ``doc.event.type`` has a unique mapping to an
+aggregate type.</strong> The event type <tt class="docutils literal">contactCreated</tt> would obviously
+map to a contact. This solution would probably backfire eventually.
+I'd rather have an event type called <tt class="docutils literal">cescriptionChanged</tt> instead of
+<tt class="docutils literal">contactDescriptionChanged</tt>.</li>
+<li><strong>having a single CouchDB-database for every aggregate type.</strong> To keep
+the database in sync, I strongly suggest against this.</li>
+</ul>
+<p>The aggregate type is put as the first part to easily distinguish what
+event type we are working with when looking at events.</p>
+<p>Inbetween the aggregate type and the version specifier, a unique
+identifier is stored. It is unique throughout the lifetime of the
+aggregate root.</p>
+</div>
+<div class="section" id="globalid">
+<h4>globalId</h4>
+<p>globalId is an orderable ID that makes it possible to traverse through
+the global order of events. In my examples I've used <a class="reference external" href="http://docs.python.org/2/library/uuid.html#uuid.uuid1">type 1 UUIDs</a>.</p>
+</div>
+<div class="section" id="event">
+<h4>event</h4>
+<p>Holds the data that describes the event. <cite>event.type</cite> also contains a
+string describing what type of event it is.</p>
+</div>
+<div class="section" id="meta">
+<h4>meta</h4>
+<p>This is a property not strictly related to the specific event, but
+information that can be used for debugability. Examples are timestamps,
+which client published the event, which user did it etc. The latter is
+great information to create a highly auditable system.</p>
+</div>
+</div>
+<div class="section" id="event-projection-views">
+<h3>Event projection views</h3>
+<p>Using the previously described event schema, CouchDB's map/reduced based
+views can be used to create most simple cases of projections:</p>
+<p>Here's a design document that keeps track of the description of a
+person:</p>
+<script src="https://gist.github.com/JensRantil/6417018.js"></script><p>The secret sauce here is to use the aggregate root to to decide whether
+to update the reduce state or not.</p>
+<p>What a view cannot do is keep track of older versions of an aggregate
+root. This requires building state in an external application that tracks
+database changes. Good news is that this is fairly easy to do as CouchDB
+ships with a <a class="reference external" href="http://guide.couchdb.org/draft/notifications.html">changes API</a>. This makes it easy for an external
+application to easily track state as events are being published.</p>
+</div>
+<div class="section" id="handling-replication-conflicts">
+<h3>Handling replication conflicts</h3>
+<p>One of CouchDB's unique selling points is <em>master-to-master
+replication</em>. There's some cool stuff that this enables you to do. For
+example you can easily implement syncing clients using libraries such as
+<a class="reference external" href="http://pouchdb.com">PouchDB</a> and <a class="reference external" href="http://labs.couchbase.com/TouchDB-iOS/">TouchDB</a>.</p>
+<p>Sadly, master-master replication comes with a cost; namely the fact
+that it's possible that there can be replication conflicts if two or
+more CouchDB instances changes a document and then sync. CouchDB uses
+<a class="reference external" href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> and automagically chooses a winner. Sometimes this might not be
+the right winner. This happens you can <a class="reference external" href="http://guide.couchdb.org/draft/conflicts.html">tell CouchDB that you
+prefer another winner</a>.</p>
+<p>My example implementation above would not handle write conflicts very
+well. It would be able to fix a basic conflict like this:</p>
+<pre class="literal-block">
+1 -&gt; 2 --&gt; 3a
+       \
+        -&gt; 3b
+</pre>
+<p>However, if a series of multiple events would conflict, it would be
+impossible to recreate the different event history paths that might have
+occured. The following conflicting events:</p>
+<pre class="literal-block">
+1 -&gt; 2 --&gt; 3a -&gt; 4a
+       \
+        -&gt; 3b -&gt; 4b
+</pre>
+<p>could mean either of these histories:</p>
+<pre class="literal-block">
+1 -&gt; 2 -&gt; 3a -&gt; 4a
+1 -&gt; 2 -&gt; 3a -&gt; 4b
+1 -&gt; 2 -&gt; 3b -&gt; 4a
+1 -&gt; 2 -&gt; 3b -&gt; 4b
+</pre>
+<p>This could be problematic, as CouchDB could choose a corrupt event
+history. Picking one event from one CouchDB source, and another event
+from another CouchDB instance's line of history.</p>
+<p>To remedy this, I would incorporate a <tt class="docutils literal">prevRevision</tt> property for
+every event. Every version of a CouchDB document would have a revision
+that changes every time the document changes. By always refering to the
+previous revision you would essentially have a single-linked history,
+similar to the way <a class="reference external" href="http://git-scm.com">GIT</a> works with its SHA-1's.</p>
+</div>
+</div>
+<div class="section" id="other-advantages-of-couchdb">
+<h2>Other advantages of CouchDB</h2>
+<p>I've always been fond of CouchDB's different approach to dealing with
+things as opposed to other databases. Here are a couple of other things
+that are worthwhile to know about:</p>
+<ul class="simple">
+<li><strong>Crash friendliness.</strong> CouchDB uses an append-only file for it's
+data. To restore used up space a <em>compaction</em> need to take place. It's
+up the database maintainer to decide when a compaction happens. This
+append-only architecture means that CouchDB can crash at any time. In
+fact, the normal way to shut down CouchDB is simply to kill it.</li>
+<li><strong>BigCouch.</strong> BigCouch is a CouchDB proxy that sits in front of
+multiple CouchDB instances. It mirrors the CouchDB REST API as close
+as possible, but transparently uses real CouchDB instances as
+backends. This makes it possible to store huge amounts of data in
+CouchDB. The flipside is that <a class="reference external" href="https://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Reduce_vs_rereduce">rereduce</a> steps in a view always need to
+take place in in BigCouch (which is usually not a problem).</li>
+</ul>
+<ul class="simple">
+<li><strong>Commercial solutions</strong>, such as <a class="reference external" href="http://www.cloudant.com">Cloudant</a> and <a class="reference external" href="http://www.iriscouch.com">IrisCouch</a>.</li>
+</ul>
+</div>
+<div class="section" id="an-implementation">
+<h2>An implementation</h2>
+<p>I've started on an implementation of all of this, but I'm still trying
+to figure out if it's too over-engineered or not :). Until then, I'll
+keep it unpublished. Keep a lookout of <a class="reference external" href="http://www.github.com/JensRantil">my Github account</a> to see when
+it shows up!</p>
+</div>
+<div class="section" id="future-improvements">
+<h2>Future improvements</h2>
+<p>CouchDB has claimed to be &quot;a a database for the web&quot;. It talks HTTP and
+there's been numerous libraries that makes it possible to host a full
+web application in a CouchDB instance. The means that CouchDB would
+fully replace the classical web server (Apache, nginx etc.) setup.</p>
+<p>Recently I've been trying to wrap my head around how <a class="reference external" href="http://blog.mattwoodward.com/2012/03/definitive-guide-to-couchdb.html">authorization
+works in CouchDB</a>, especially when it comes to dealing with design
+documents. I'm not entirely sure it would be possible to expose the
+whole event store directly to the Internet. However, if this would be
+doable with correct authorization it would allow some cool stuff such as
+fully hosting event stored applications in CouchDB, possibly together
+with <a class="reference external" href="http://pouchdb.com">PouchDB</a>.</p>
+</div>
+
+
+		<div id="article_meta">
+							Category:
+					<a href="http://jensrantil.github.io/category/misc.html">misc</a>
+										<br />Tags:
+									<a href="http://jensrantil.github.io/tag/cqrs.html">cqrs</a>
+									<a href="http://jensrantil.github.io/tag/distributed-architecture.html">distributed-architecture</a>
+									</div>
+	</article>
+
+	<div class="donations">
+		Dude, did you like this blog post? Feel free to
+		drop me some bitcoins on
+		<a href="bitcoin:1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v">1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v</a>.
+	</div>
+
+	<footer>
+		<a href="http://jensrantil.github.io/" class="button_accent">&larr;&nbsp;&nbsp;&nbsp;Back to blog</a>
+	</footer>
+
+		<div id="comments">
+		<h2>Comments</h2>
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_identifier = "bootstrapping-couchdb-as-event-store.html";
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = 'http://jensrantil.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+		<noscript>Please enable JavaScript to view <a href="http://disqus.com/?ref_noscript">comments</a>.</noscript>
+	</div>
+	
+	</section>
+
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+		try {
+			var pageTracker = _gat._getTracker("UA-40929103-1");
+			pageTracker._trackPageview();
+		} catch(err) {}</script>
+</body>
+</html>
