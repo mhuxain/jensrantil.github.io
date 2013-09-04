@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-09-04T18:15:00+02:00</updated><entry><title>GIT mirroring using Jenkins</title><link href="http://jensrantil.github.io/git-mirroring-using-jenkins.html" rel="alternate"></link><updated>2013-09-04T18:15:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-09-04:git-mirroring-using-jenkins.html</id><summary type="html">&lt;p&gt;For the past couple of weeks I've been annoyed by the high latency
-when connecting to Github over SSH. While the other GIT transports could
+when connecting to &lt;a class="reference external" href="https://github.com"&gt;Github&lt;/a&gt; over SSH. While the other GIT transports could
 be an option, I prefer to use keys to authenticate against Github.&lt;/p&gt;
 &lt;p&gt;This got me thinking about setting up a local GIT mirror at our office.
 To keep my project future proof, I planned to make this a cron-job-ish
 project; every so often it would checkout all repositories for a certain
 organization.&lt;/p&gt;
-&lt;p&gt;Then it struck me - I'm already running a Jenkins installation that
+&lt;p&gt;Then it struck me - I'm already running a &lt;a class="reference external" href="http://www.jenkins-ci.org"&gt;Jenkins&lt;/a&gt; installation that
 pulls commits from Github regularly. Why not reuse those repositories?
 So far my GIT mirror setup has been working great - and has also made us
 more resilient to Github downtime. Here's how I've done it:&lt;/p&gt;
