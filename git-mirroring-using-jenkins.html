@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/style.css">
+	<!--<link rel="stylesheet/less" type="text/css" href="/theme/css/style.less">-->
+	<!--<script src="/theme/js/less.js" type="text/javascript"></script>-->
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/pygments.css">
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:800,400,300|Inconsolata' rel='stylesheet' type='text/css'>
+
+	<link href="http://jensrantil.github.io/" type="application/atom+xml" rel="alternate" title="Jens Rantil's Hideout ATOM Feed" />
+	
+	
+			<title>Jens Rantil's Hideout</title>
+		<meta charset="utf-8" />
+	</head>
+<body>
+	<section id="sidebar">
+		<figure id="user_logo">
+            <a href="http://jensrantil.github.io"><div class="logo">&nbsp;</div></a>
+		</figure>
+
+		<div class="user_meta">
+            <h1 id="user"><a href="http://jensrantil.github.io" class="">Jens Rantil</a></h1>
+			<h2></h2>
+						<p class="bio">Swedish/English, fullstack software engineer (<a href="http://www.telavox.se" target="_blank">@Telavox</a>), <a href="http://www.lth.se/english/education/programmes/master_engineering/engineering_mathematics/">MSc in Engineering Mathematics</a>, traveller, nerd, juggler, guitarist, african drum player. Inspired Swede.</p>
+						<ul>
+																			<li><a href="http://jensrantil.github.io/pages/about-jens.html">About Jens</a></li>
+																		<li><a href="http://www.twitter.com/JensRantil">Twitter</a></li>
+									<li><a href="http://www.github.com/JensRantil">Github</a></li>
+									<li><a href="http://www.linkedin.com/in/jensrantil">LinkedIn</a></li>
+							</ul>
+		</div>
+		<footer>
+			<address>
+				Powered by <a href="http://pelican.notmyidea.org/">Pelican</a>,
+		                theme by <a href="https://github.com/wting/pelican-svbtle">wting</a>.
+			</address>
+		</footer>
+	</section>
+
+	<section id="posts">
+			<header>
+		<h1>Jens Rantil's blog</h1>
+		<h3>Posted Wed 04 September 2013</h3>
+	</header>
+	<article>
+		<h1 id="title">
+			<a href="http://jensrantil.github.io/git-mirroring-using-jenkins.html" rel="bookmark"
+				title="Permalink to GIT mirroring using Jenkins">GIT mirroring using Jenkins</a>
+		</h1>
+		<p>For the past couple of weeks I've been annoyed by the high latency
+when connecting to Github over SSH. While the other GIT transports could
+be an option, I prefer to use keys to authenticate against Github.</p>
+<p>This got me thinking about setting up a local GIT mirror at our office.
+To keep my project future proof, I planned to make this a cron-job-ish
+project; every so often it would checkout all repositories for a certain
+organization.</p>
+<p>Then it struck me - I'm already running a Jenkins installation that
+pulls commits from Github regularly. Why not reuse those repositories?
+So far my GIT mirror setup has been working great - and has also made us
+more resilient to Github downtime. Here's how I've done it:</p>
+<div class="section" id="serving-the-jenkins-checkouts">
+<h2>Serving the Jenkins checkouts</h2>
+<p>First you need to figure out where Jenkins has its working folder. In
+general this is stored in <tt class="docutils literal"><span class="pre">$HOME/.jenkins</span></tt>. Since I am running Jenkins
+as the user &quot;jenkins&quot; on my system, my Jenkins working directory is
+<tt class="docutils literal"><span class="pre">/home/jenkins/.jenkins</span></tt>.</p>
+<p>Next, you need to start the GIT daemon that serves your GIT fetches.
+There are many ways to run this command, I'm using <a class="reference external" href="http://supervisord.org">supervisord</a>.  Here's
+the command I've been using:</p>
+<pre class="literal-block">
+$ git daemon --reuseaddr --verbose --base-path=/home/jenkins/.jenkins/jobs --export-all
+</pre>
+<p><strong>Note that the daemon will not do any authentication! Reads will be
+allowed by anyone.</strong> Writes, however, will be blocked. This means someone
+can <em>pull</em> changes from the Jenkins host, but not <em>push</em> any.</p>
+</div>
+<div class="section" id="configuring-a-git-client">
+<h2>Configuring a GIT client</h2>
+<p>Configuring your GIT command line client is a two step process:</p>
+<p>First, add a <a class="reference external" href="http://gitref.org/remotes/">GIT remote</a> pointing to your Jenkins server:</p>
+<pre class="literal-block">
+$ cd &lt;your-local-git-clone&gt;
+$ git remote add --no-tags jenkins git://YOUR-JENKINS-SERVER/JOB-NAME/workspace/.git
+</pre>
+<p><tt class="docutils literal"><span class="pre">JOB-NAME</span></tt> is the name you've given your job in Jenkins.</p>
+<p>Secondly, you need to make a modification to
+<tt class="docutils literal"><span class="pre">&lt;your-local-git-clone&gt;/.git/config</span></tt>. Replace the following line:</p>
+<pre class="literal-block">
+fetch = +refs/heads/*:refs/remotes/jenkins/*
+</pre>
+<p>with:</p>
+<pre class="literal-block">
+fetch = +refs/remotes/origin/*:refs/remotes/jenkins/*
+</pre>
+<p>. What this change will do, is to ignore all the local branches on your
+Jenkins's host and instead instead only use your Jenkins's remote
+branches.</p>
+<p>When you've done the above you can:</p>
+<pre class="literal-block">
+$ git fetch jenkins
+</pre>
+<p>If everything is succesful, you should now have a bunch of <tt class="docutils literal">jenkins/*</tt>
+branches in your local repository.</p>
+</div>
+<div class="section" id="additional-comments">
+<h2>Additional comments</h2>
+<blockquote>
+<ul class="simple">
+<li>If you choose to not include <tt class="docutils literal"><span class="pre">--no-tags</span></tt> (in <tt class="docutils literal">git remote add</tt>)
+<tt class="docutils literal">git fetch</tt> will fetch a <em>tag</em> for every unique build that Jenkins
+has build historically. If you'd like to checkout a specific build,
+you might want to drop <tt class="docutils literal"><span class="pre">--no-tags</span></tt>. I just felt I was bloating my
+local tags...</li>
+<li>Only the branches specified to be fetched by Jenkins will be
+mirrored. If you would like to add more branches you do that under &quot;Branches to build&quot; at
+<a class="reference external" href="http://YOUR-JENKINS-SERVER/job/JOB-NAME/configure">http://YOUR-JENKINS-SERVER/job/JOB-NAME/configure</a></li>
+</ul>
+</blockquote>
+</div>
+
+
+		<div id="article_meta">
+							Category:
+					<a href="http://jensrantil.github.io/category/misc.html">misc</a>
+										<br />Tags:
+									<a href="http://jensrantil.github.io/tag/git.html">git</a>
+									<a href="http://jensrantil.github.io/tag/jenkins.html">jenkins</a>
+									<a href="http://jensrantil.github.io/tag/hudson.html">hudson</a>
+									</div>
+	</article>
+
+	<div class="donations">
+		Dude, did you like this blog post? Feel free to
+		drop me some bitcoins on
+		<a href="bitcoin:1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v">1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v</a>.
+	</div>
+
+	<footer>
+		<a href="http://jensrantil.github.io/" class="button_accent">&larr;&nbsp;&nbsp;&nbsp;Back to blog</a>
+	</footer>
+
+		<div id="comments">
+		<h2>Comments</h2>
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_identifier = "git-mirroring-using-jenkins.html";
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = 'http://jensrantil.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+		<noscript>Please enable JavaScript to view <a href="http://disqus.com/?ref_noscript">comments</a>.</noscript>
+	</div>
+	
+	</section>
+
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+		try {
+			var pageTracker = _gat._getTracker("UA-40929103-1");
+			pageTracker._trackPageview();
+		} catch(err) {}</script>
+</body>
+</html>

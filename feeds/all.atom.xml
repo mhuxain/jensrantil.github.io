@@ -1,5 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-09-02T22:49:00+02:00</updated><entry><title>Bootstrapping: CouchDB as event store</title><link href="http://jensrantil.github.io/bootstrapping-couchdb-as-event-store.html" rel="alternate"></link><updated>2013-09-02T22:49:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-09-02:bootstrapping-couchdb-as-event-store.html</id><summary type="html">&lt;p&gt;I've previously written about &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;what event sourcing is&lt;/a&gt;. Reading about
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-09-04T18:15:00+02:00</updated><entry><title>GIT mirroring using Jenkins</title><link href="http://jensrantil.github.io/git-mirroring-using-jenkins.html" rel="alternate"></link><updated>2013-09-04T18:15:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-09-04:git-mirroring-using-jenkins.html</id><summary type="html">&lt;p&gt;For the past couple of weeks I've been annoyed by the high latency
+when connecting to Github over SSH. While the other GIT transports could
+be an option, I prefer to use keys to authenticate against Github.&lt;/p&gt;
+&lt;p&gt;This got me thinking about setting up a local GIT mirror at our office.
+To keep my project future proof, I planned to make this a cron-job-ish
+project; every so often it would checkout all repositories for a certain
+organization.&lt;/p&gt;
+&lt;p&gt;Then it struck me - I'm already running a Jenkins installation that
+pulls commits from Github regularly. Why not reuse those repositories?
+So far my GIT mirror setup has been working great - and has also made us
+more resilient to Github downtime. Here's how I've done it:&lt;/p&gt;
+&lt;div class="section" id="serving-the-jenkins-checkouts"&gt;
+&lt;h2&gt;Serving the Jenkins checkouts&lt;/h2&gt;
+&lt;p&gt;First you need to figure out where Jenkins has its working folder. In
+general this is stored in &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;$HOME/.jenkins&lt;/span&gt;&lt;/tt&gt;. Since I am running Jenkins
+as the user &amp;quot;jenkins&amp;quot; on my system, my Jenkins working directory is
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;/home/jenkins/.jenkins&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Next, you need to start the GIT daemon that serves your GIT fetches.
+There are many ways to run this command, I'm using &lt;a class="reference external" href="http://supervisord.org"&gt;supervisord&lt;/a&gt;.  Here's
+the command I've been using:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+$ git daemon --reuseaddr --verbose --base-path=/home/jenkins/.jenkins/jobs --export-all
+&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Note that the daemon will not do any authentication! Reads will be
+allowed by anyone.&lt;/strong&gt; Writes, however, will be blocked. This means someone
+can &lt;em&gt;pull&lt;/em&gt; changes from the Jenkins host, but not &lt;em&gt;push&lt;/em&gt; any.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="configuring-a-git-client"&gt;
+&lt;h2&gt;Configuring a GIT client&lt;/h2&gt;
+&lt;p&gt;Configuring your GIT command line client is a two step process:&lt;/p&gt;
+&lt;p&gt;First, add a &lt;a class="reference external" href="http://gitref.org/remotes/"&gt;GIT remote&lt;/a&gt; pointing to your Jenkins server:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+$ cd &amp;lt;your-local-git-clone&amp;gt;
+$ git remote add --no-tags jenkins git://YOUR-JENKINS-SERVER/JOB-NAME/workspace/.git
+&lt;/pre&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;JOB-NAME&lt;/span&gt;&lt;/tt&gt; is the name you've given your job in Jenkins.&lt;/p&gt;
+&lt;p&gt;Secondly, you need to make a modification to
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;&amp;lt;your-local-git-clone&amp;gt;/.git/config&lt;/span&gt;&lt;/tt&gt;. Replace the following line:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+fetch = +refs/heads/*:refs/remotes/jenkins/*
+&lt;/pre&gt;
+&lt;p&gt;with:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+fetch = +refs/remotes/origin/*:refs/remotes/jenkins/*
+&lt;/pre&gt;
+&lt;p&gt;. What this change will do, is to ignore all the local branches on your
+Jenkins's host and instead instead only use your Jenkins's remote
+branches.&lt;/p&gt;
+&lt;p&gt;When you've done the above you can:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+$ git fetch jenkins
+&lt;/pre&gt;
+&lt;p&gt;If everything is succesful, you should now have a bunch of &lt;tt class="docutils literal"&gt;jenkins/*&lt;/tt&gt;
+branches in your local repository.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="additional-comments"&gt;
+&lt;h2&gt;Additional comments&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;If you choose to not include &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;--no-tags&lt;/span&gt;&lt;/tt&gt; (in &lt;tt class="docutils literal"&gt;git remote add&lt;/tt&gt;)
+&lt;tt class="docutils literal"&gt;git fetch&lt;/tt&gt; will fetch a &lt;em&gt;tag&lt;/em&gt; for every unique build that Jenkins
+has build historically. If you'd like to checkout a specific build,
+you might want to drop &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;--no-tags&lt;/span&gt;&lt;/tt&gt;. I just felt I was bloating my
+local tags...&lt;/li&gt;
+&lt;li&gt;Only the branches specified to be fetched by Jenkins will be
+mirrored. If you would like to add more branches you do that under &amp;quot;Branches to build&amp;quot; at
+&lt;a class="reference external" href="http://YOUR-JENKINS-SERVER/job/JOB-NAME/configure"&gt;http://YOUR-JENKINS-SERVER/job/JOB-NAME/configure&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;/div&gt;
+</summary><category term="git"></category><category term="jenkins"></category><category term="hudson"></category></entry><entry><title>Bootstrapping: CouchDB as event store</title><link href="http://jensrantil.github.io/bootstrapping-couchdb-as-event-store.html" rel="alternate"></link><updated>2013-09-02T22:49:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-09-02:bootstrapping-couchdb-as-event-store.html</id><summary type="html">&lt;p&gt;I've previously written about &lt;a class="reference external" href="http://jensrantil.github.io/cqrs-time-to-rewind.html"&gt;what event sourcing is&lt;/a&gt;. Reading about
 it, you might think &amp;quot;heck, sounds great! But how do I get started?&amp;quot;.
 This blog post will propose a simple way.&lt;/p&gt;
 &lt;div class="section" id="a-minimum-viable-product"&gt;
@@ -225,6 +295,16 @@ whole event store directly to the Internet. However, if this would be
 doable with correct authorization it would allow some cool stuff such as
 fully hosting event stored applications in CouchDB, possibly together
 with &lt;a class="reference external" href="http://pouchdb.com"&gt;PouchDB&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+</summary><category term="cqrs"></category><category term="distributed-architecture"></category></entry><entry><title>Lifecycles and states</title><link href="http://jensrantil.github.io/lifecycles-and-states.html" rel="alternate"></link><updated>2013-09-02T22:49:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-09-02:lifecycles-and-states.html</id><summary type="html">&lt;p&gt;There's &lt;a href="#id1"&gt;&lt;span class="problematic" id="id2"&gt;plenty_&lt;/span&gt;&lt;/a&gt; &lt;a href="#id3"&gt;&lt;span class="problematic" id="id4"&gt;of_&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;div class="system-messages section"&gt;
+&lt;h2&gt;Docutils System Messages&lt;/h2&gt;
+&lt;div class="system-message" id="id1"&gt;
+&lt;p class="system-message-title"&gt;System Message: ERROR/3 (&lt;tt class="docutils"&gt;/Users/jens/Development/src/pelican/content/content/lifecycles-and-states.rst&lt;/tt&gt;, line 8); &lt;em&gt;&lt;a href="#id2"&gt;backlink&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+Unknown target name: &amp;quot;plenty&amp;quot;.&lt;/div&gt;
+&lt;div class="system-message" id="id3"&gt;
+&lt;p class="system-message-title"&gt;System Message: ERROR/3 (&lt;tt class="docutils"&gt;/Users/jens/Development/src/pelican/content/content/lifecycles-and-states.rst&lt;/tt&gt;, line 8); &lt;em&gt;&lt;a href="#id4"&gt;backlink&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+Unknown target name: &amp;quot;of&amp;quot;.&lt;/div&gt;
 &lt;/div&gt;
 </summary><category term="cqrs"></category><category term="distributed-architecture"></category></entry><entry><title>Java's missing optional keyword and the issues of null</title><link href="http://jensrantil.github.io/javas-missing-optional-keyword-and-the-issues-of-null.html" rel="alternate"></link><updated>2013-08-22T00:52:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-22:javas-missing-optional-keyword-and-the-issues-of-null.html</id><summary type="html">&lt;p&gt;One of my pet peaves when it comes to the Java programming languages [1]
 is that it does not do enough &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Type_safety"&gt;type safety&lt;/a&gt;. The issue is, simply, that
