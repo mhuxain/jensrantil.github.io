@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/style.css">
+	<!--<link rel="stylesheet/less" type="text/css" href="/theme/css/style.less">-->
+	<!--<script src="/theme/js/less.js" type="text/javascript"></script>-->
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/pygments.css">
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:800,400,300|Inconsolata' rel='stylesheet' type='text/css'>
+
+	<link href="http://jensrantil.github.io/" type="application/atom+xml" rel="alternate" title="Jens Rantil's Hideout ATOM Feed" />
+	
+	
+			<title>Jens Rantil's Hideout</title>
+		<meta charset="utf-8" />
+	</head>
+<body>
+	<section id="sidebar">
+		<figure id="user_logo">
+            <a href="http://jensrantil.github.io"><div class="logo">&nbsp;</div></a>
+		</figure>
+
+		<div class="user_meta">
+            <h1 id="user"><a href="http://jensrantil.github.io" class="">Jens Rantil</a></h1>
+			<h2></h2>
+						<p class="bio">Swedish/English, fullstack software engineer (<a href="http://www.telavox.se" target="_blank">@Telavox</a>), <a href="http://www.lth.se/english/education/programmes/master_engineering/engineering_mathematics/">MSc in Engineering Mathematics</a>, traveller, nerd, juggler, guitarist, african drum player. Inspired Swede.</p>
+						<ul>
+																			<li><a href="http://jensrantil.github.io/pages/about-jens.html">About Jens</a></li>
+																		<li><a href="http://www.twitter.com/JensRantil">Twitter</a></li>
+									<li><a href="http://www.github.com/JensRantil">Github</a></li>
+									<li><a href="http://www.linkedin.com/in/jensrantil">LinkedIn</a></li>
+							</ul>
+		</div>
+		<footer>
+			<address>
+				Powered by <a href="http://pelican.notmyidea.org/">Pelican</a>,
+		                theme by <a href="https://github.com/wting/pelican-svbtle">wting</a>.
+			</address>
+		</footer>
+	</section>
+
+	<section id="posts">
+			<header>
+		<h1>Jens Rantil's blog</h1>
+		<h3>Posted Mon 18 November 2013</h3>
+	</header>
+	<article>
+		<h1 id="title">
+			<a href="http://jensrantil.github.io/im-a-state-engineer-are-you-too.html" rel="bookmark"
+				title="Permalink to I'm a State Engineer. Are you, too?">I'm a State Engineer. Are you, too?</a>
+		</h1>
+		<p>TL;DR: We need to have a more thorough discussion about state and
+lifecycles in our industry.</p>
+<p>I recently revisited <a class="reference external" href="http://12factor.net">The Twelve-Factor App</a> by <a class="reference external" href="https://www.heroku.com">Heroku</a>. It's a great
+read if you are deploying your own application, are interested in
+(organizational and/or technincal) scaling or curious of best practices
+when it comes to deployment.</p>
+<p>As I was reading the manifest it struck me that there are two words that
+I hear all too infrequently in our industry, namely <em>state</em> and
+<em>lifecycle</em>. The words have different meaning, yet they are related in
+so many ways. All state has a lifecycle, otherwise the state would not
+be worth thinking of.</p>
+<p>Software engineers are surrounded by <em>state</em> all the time. So are
+software architects. In fact, state can flow through every layer of a
+software stack. Not to mention how state can be spread out across a
+plethora in a distributed system; databases, caches, queues etc. State
+also applies to a wide range of scopes; within a function/method, within
+a class, within a software component, within a distributed application,
+or even an orchestration of distributed applications.</p>
+<p>As software engineers we need to respect state and how inherently
+difficult it to get it right. The majority of bugs are related to state
+in one way of another. This is why we always need to formalize how and
+where state is stored. Asking the question &quot;Do we need the state?&quot; is
+also worth doing so often.</p>
+<p>The <em>how</em> is important. How can we as software engineers minimize errors
+due to state? Here are a couple of ideas:</p>
+<p><strong>Use constants as much as possible.</strong> Make it clear that a variable
+cannot be changed. The <a class="reference external" href="http://www.erlang.org">Erlang</a> and <a class="reference external" href="http://www.haskell.org">Haskell</a> programming languages go as
+far as not even allowing changing the values of any variable. One needs
+to define a new variable.</p>
+<p><strong>Use immutable data structures as much as possible.</strong> Slightly related
+to the previous paragraph. This is
+especially important when state is moving through a system. Sure, this
+will make systems slower in some case, but use immutability by default
+and mutability only where it's really needed. In <a class="reference external" href="http://www.erlang.org">Erlang</a> all state sent
+between components (called &quot;processes&quot;) is immutable.</p>
+<p><strong>Isolate state</strong> and <strong>minimize inter-state dependencies</strong>. Make sure
+that the implementation modifying state is isolated. This makes it
+easier to get an overview of various states in the system and what makes
+them transition into new states. Two ways of isolating state are two put
+it in a separate (possibly, green) thread or, even better, binding to a
+function/method scope.</p>
+<p>Isolation of state can be an argument to decouple components of a bigger
+system into smaller isolated ones. Paradoxically, isolating state can
+also introduce other issues. A common issue of decoupling state into
+distributed components is that state transitions can fail due to network
+and/or timing issues.</p>
+<p><strong>Make state shortlived.</strong> The fewer state changes the easier it becomes
+to reason about them. This is where state <em>lifecycle</em> becomes an
+important concept. A shortlived state makes programmers less prone to
+introduce errors. Maybe your state can be computed from some other
+external state.</p>
+<p>The <a class="reference external" href="http://www.erlang.org">Erlang</a> programming language brings the concept of &quot;supervisors&quot; to
+the table.  This enables you to do exactly this.</p>
+<p><strong>Start thinking about asynchronicity.</strong> An async call between component
+leads to a looser coupling. It also means that unexpected states will
+not break other states.</p>
+<p><strong>For distributed systems; learn about the CAP theorem.</strong> The <a class="reference external" href="https://en.wikipedia.org/wiki/CAP_theorem">CAP</a>
+theorem states that in the case of a network partition (P), you have
+choose between <a class="reference external" href="http://basho.com/riak/">availability</a> (A) and <a class="reference external" href="https://github.com/coreos/etcd">consistency</a> (C). The concept of a
+<a class="reference external" href="http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/RR-6956.pdf">CRDT</a> can also be interesting to know about if you'd like to relax
+consistency a bit.</p>
+<p><strong>Have a look at the concepts of CQS, CQRS, event sourcing.</strong> Don't
+worry, you don't necessarily have to use them. But give them some
+thought for a moment. <a class="reference external" href="https://en.wikipedia.org/wiki/Command%E2%80%93query_separation">CQS</a> and <a class="reference external" href="http://martinfowler.com/bliki/CQRS.html">CQRS</a> are kind of similar. <a class="reference external" href="http://martinfowler.com/eaaDev/EventSourcing.html">Event
+sourcing</a> can be used with CQRS to make things really badass. Are you
+optimizing for reads or writes? Choose.</p>
+<p>This list above is definitely not exhaustive and I'd love to get more
+input in the comments below.</p>
+<p>Over the past couple of years, learning new programming languages and
+studying distributed systems engineering has given me a huge toolset
+when it comes to reasoning about state. This is the one reason I encourage
+software developers to learn about new software paradigms and <a class="reference external" href="http://blog.teamtreehouse.com/learn-a-new-programming-language-every-year">one
+programming language per year</a>. My greatest insight into how state can
+be dealt with has definitely been looking into how the <a class="reference external" href="http://www.erlang.org">Erlang</a>
+programming language. A good resource when it comes to distributed
+systems is reading the <a class="reference external" href="http://zguide.zeromq.org/page:all">ZeroMQ Guide</a>.</p>
+<p>Lately, I've been thinking about retitling myself as a &quot;state engineer&quot;.
+Maybe you should, too? Feel free to discuss below or contact me <a class="reference external" href="http://jensrantil.github.io/pages/about-jens.html">by some
+other means</a>.</p>
+
+
+		<div id="article_meta">
+							Category:
+					<a href="http://jensrantil.github.io/category/misc.html">misc</a>
+										<br />Tags:
+									<a href="http://jensrantil.github.io/tag/architecture.html">architecture</a>
+									<a href="http://jensrantil.github.io/tag/programming.html">programming</a>
+									</div>
+	</article>
+
+	<div class="donations">
+		Dude, did you like this blog post? Feel free to
+		drop me some bitcoins on
+		<a href="bitcoin:1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v">1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v</a>.
+	</div>
+
+	<footer>
+		<a href="http://jensrantil.github.io/" class="button_accent">&larr;&nbsp;&nbsp;&nbsp;Back to blog</a>
+	</footer>
+
+		<div id="comments">
+		<h2>Comments</h2>
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_identifier = "im-a-state-engineer-are-you-too.html";
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = 'http://jensrantil.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+		<noscript>Please enable JavaScript to view <a href="http://disqus.com/?ref_noscript">comments</a>.</noscript>
+	</div>
+	
+	</section>
+
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+		try {
+			var pageTracker = _gat._getTracker("UA-40929103-1");
+			pageTracker._trackPageview();
+		} catch(err) {}</script>
+</body>
+</html>
