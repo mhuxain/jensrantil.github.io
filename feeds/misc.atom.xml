@@ -1,6 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-11-18T23:43:00+01:00</updated><entry><title>New PGP key</title><link href="http://jensrantil.github.io/new-pgp-key.html" rel="alternate"></link><updated>2013-11-18T23:43:00+01:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-11-18:new-pgp-key.html</id><summary type="html">&lt;p&gt;Just wanted to give you a heads up that I recently generated a &lt;cite&gt;new PGP
-key&lt;/cite&gt;. Its fingerprint is &lt;tt class="docutils literal"&gt;4371 E7ED 3A3D DBB4 12B5 C68F BA63 2DB6 91DA
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/misc.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2013-12-02T23:04:00+01:00</updated><entry><title>Why the Web is so Slow</title><link href="http://jensrantil.github.io/why-the-web-is-so-slow.html" rel="alternate"></link><updated>2013-12-02T23:04:00+01:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-12-02:why-the-web-is-so-slow.html</id><summary type="html">&lt;p&gt;I just read the blog post &lt;a class="reference external" href="http://calendar.perfplanet.com/2013/why-is-the-web-so-slow/"&gt;Why is the web so slow?&lt;/a&gt; by &lt;a class="reference external" href="http://www.phpied.com/"&gt;Stoyan
+Stefanov&lt;/a&gt;. This gave me the idea to give some common reasons for the
+web to be slow. I've been using &amp;quot;web application&amp;quot; fairly sloppy here. It
+could also mean &amp;quot;website&amp;quot; etc. Here they are:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Because of actual distance from your computer to the webserver. The
+upper limit is the speed of light. This means that it is an
+impossibility for information to travel from Sydney to London in less
+than ~0.056 seconds (17009 kilometers).&lt;/li&gt;
+&lt;li&gt;Fetching a webpage requires a roundtrip of information; a request and
+response. This effectively nearly doubles the time to fetch something.&lt;/li&gt;
+&lt;li&gt;Websites generally has a bunch of static files (images, javascript,
+CSS). The web browser has a &lt;a class="reference external" href="http://stackoverflow.com/questions/985431/max-parallel-http-connections-in-a-browser"&gt;limit&lt;/a&gt; on the number of files that can be
+fetched in parallel. Similar images can be assembled into &lt;a class="reference external" href="http://css-tricks.com/css-sprites/"&gt;sprites&lt;/a&gt;,
+JavaScript and CSS can be &lt;a class="reference external" href="https://code.google.com/p/minify/"&gt;combined and compressed&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;The &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol"&gt;HTTP protocol&lt;/a&gt; does not support a single connection fetching
+multiple static assets in parallel.&lt;/li&gt;
+&lt;li&gt;SSL requires a longer complicated handshake and extra CPU when sending
+and receiving data.&lt;/li&gt;
+&lt;li&gt;Because of unnecessary synchronicity in dynamic applications.
+Historically it's been possible for developers to only update the
+portions of a website that needs update. However, the tools have not
+really been up to speed. This has changed. Many modern JavaScript
+frameworks has created new opportunities here. Yes, I'm thinking of
+you &lt;a class="reference external" href="http://angularjs.org/"&gt;AngularJS&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Because of sloppy considerations of caching. Getting up to speed with
+a web application is pretty easy. Getting HTTP caching right requires
+some thought.&lt;/li&gt;
+&lt;li&gt;Because many web applications have not migrated to use a &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Content_delivery_network"&gt;CDN&lt;/a&gt;. If we
+come together and all use CDNs, our visitors would be way more likely
+to have the common static files cached.&lt;/li&gt;
+&lt;li&gt;Because of complex rendering of websites. The implications of complex
+HTML structure and CSS selectors is that rendering of a website is
+slow. KISS = Keep It Simple, Stupid.&lt;/li&gt;
+&lt;li&gt;Because many web servers today are still not delivering compressed
+HTTP responses, such as &lt;cite&gt;GZip&lt;/cite&gt;.&lt;/li&gt;
+&lt;li&gt;Because many webdevelopers don't understand the implications of using
+slow third party assets. Yes, I'm looking at you Analytics and Ad
+Companies! Slow assets gives website visitors the feeling that the
+website is not done loading when 99% of the assets really are.&lt;/li&gt;
+&lt;li&gt;Because many webdevelopers still are using JavaScript when they don't
+have to. CSS3 can animate and allow for simple logic without
+JavaScript.&lt;/li&gt;
+&lt;li&gt;Because we are sending cookies for a lot of content that does not
+require cookes.&lt;/li&gt;
+&lt;li&gt;Because HTML is larger that it needs to be. Reusing CSS classes
+reduces the size of HTML to be fetched.&lt;/li&gt;
+&lt;li&gt;Because images are sent when they really could be emulated using CSS.
+This is a thing of the past that still bugs me.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Google's networking protocol &lt;a class="reference external" href="https://en.wikipedia.org/wiki/SPDY"&gt;SPDY&lt;/a&gt; aims to solve some of these issues
+and make the web faster.&lt;/p&gt;
+&lt;p&gt;Did I miss something? Feel free to comment below!&lt;/p&gt;
+</summary><category term="web"></category><category term="http"></category></entry><entry><title>New PGP key</title><link href="http://jensrantil.github.io/new-pgp-key.html" rel="alternate"></link><updated>2013-11-18T23:43:00+01:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-11-18:new-pgp-key.html</id><summary type="html">&lt;p&gt;Just wanted to give you a heads up that I recently generated a &lt;a class="reference external" href="https://dl.dropboxusercontent.com/u/17059539/public.asc"&gt;new PGP
+key&lt;/a&gt;. Its fingerprint is &lt;tt class="docutils literal"&gt;4371 E7ED 3A3D DBB4 12B5 C68F BA63 2DB6 91DA
 03B8&lt;/tt&gt; and its bound to &lt;tt class="docutils literal"&gt;jens.rantil&amp;#64;gmail.com&lt;/tt&gt;.&lt;/p&gt;
 &lt;p&gt;I've previously had PGP keys but they are all expired.&lt;/p&gt;
 &lt;p&gt;For people who are learning about PGP I can highly suggest these two

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/style.css">
+	<!--<link rel="stylesheet/less" type="text/css" href="/theme/css/style.less">-->
+	<!--<script src="/theme/js/less.js" type="text/javascript"></script>-->
+	<link rel="stylesheet" type="text/css" href="http://jensrantil.github.io/theme/css/pygments.css">
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:800,400,300|Inconsolata' rel='stylesheet' type='text/css'>
+
+	<link href="http://jensrantil.github.io/" type="application/atom+xml" rel="alternate" title="Jens Rantil's Hideout ATOM Feed" />
+	
+	
+			<title>Jens Rantil's Hideout</title>
+		<meta charset="utf-8" />
+	</head>
+<body>
+	<section id="sidebar">
+		<figure id="user_logo">
+            <a href="http://jensrantil.github.io"><div class="logo">&nbsp;</div></a>
+		</figure>
+
+		<div class="user_meta">
+            <h1 id="user"><a href="http://jensrantil.github.io" class="">Jens Rantil</a></h1>
+			<h2></h2>
+						<p class="bio">Swedish/English, fullstack software engineer (<a href="http://www.telavox.se" target="_blank">@Telavox</a>), <a href="http://www.lth.se/english/education/programmes/master_engineering/engineering_mathematics/">MSc in Engineering Mathematics</a>, traveller, nerd, juggler, guitarist, african drum player. Inspired Swede.</p>
+						<ul>
+																			<li><a href="http://jensrantil.github.io/pages/about-jens.html">About Jens</a></li>
+																		<li><a href="http://www.twitter.com/JensRantil">Twitter</a></li>
+									<li><a href="http://www.github.com/JensRantil">Github</a></li>
+									<li><a href="http://www.linkedin.com/in/jensrantil">LinkedIn</a></li>
+							</ul>
+		</div>
+		<footer>
+			<address>
+				Powered by <a href="http://pelican.notmyidea.org/">Pelican</a>,
+		                theme by <a href="https://github.com/wting/pelican-svbtle">wting</a>.
+			</address>
+		</footer>
+	</section>
+
+	<section id="posts">
+			<header>
+		<h1>Jens Rantil's blog</h1>
+		<h3>Posted Mon 02 December 2013</h3>
+	</header>
+	<article>
+		<h1 id="title">
+			<a href="http://jensrantil.github.io/why-the-web-is-so-slow.html" rel="bookmark"
+				title="Permalink to Why the Web is so Slow">Why the Web is so Slow</a>
+		</h1>
+		<p>I just read the blog post <a class="reference external" href="http://calendar.perfplanet.com/2013/why-is-the-web-so-slow/">Why is the web so slow?</a> by <a class="reference external" href="http://www.phpied.com/">Stoyan
+Stefanov</a>. This gave me the idea to give some common reasons for the
+web to be slow. I've been using &quot;web application&quot; fairly sloppy here. It
+could also mean &quot;website&quot; etc. Here they are:</p>
+<ul class="simple">
+<li>Because of actual distance from your computer to the webserver. The
+upper limit is the speed of light. This means that it is an
+impossibility for information to travel from Sydney to London in less
+than ~0.056 seconds (17009 kilometers).</li>
+<li>Fetching a webpage requires a roundtrip of information; a request and
+response. This effectively nearly doubles the time to fetch something.</li>
+<li>Websites generally has a bunch of static files (images, javascript,
+CSS). The web browser has a <a class="reference external" href="http://stackoverflow.com/questions/985431/max-parallel-http-connections-in-a-browser">limit</a> on the number of files that can be
+fetched in parallel. Similar images can be assembled into <a class="reference external" href="http://css-tricks.com/css-sprites/">sprites</a>,
+JavaScript and CSS can be <a class="reference external" href="https://code.google.com/p/minify/">combined and compressed</a>.</li>
+<li>The <a class="reference external" href="https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol">HTTP protocol</a> does not support a single connection fetching
+multiple static assets in parallel.</li>
+<li>SSL requires a longer complicated handshake and extra CPU when sending
+and receiving data.</li>
+<li>Because of unnecessary synchronicity in dynamic applications.
+Historically it's been possible for developers to only update the
+portions of a website that needs update. However, the tools have not
+really been up to speed. This has changed. Many modern JavaScript
+frameworks has created new opportunities here. Yes, I'm thinking of
+you <a class="reference external" href="http://angularjs.org/">AngularJS</a>.</li>
+<li>Because of sloppy considerations of caching. Getting up to speed with
+a web application is pretty easy. Getting HTTP caching right requires
+some thought.</li>
+<li>Because many web applications have not migrated to use a <a class="reference external" href="https://en.wikipedia.org/wiki/Content_delivery_network">CDN</a>. If we
+come together and all use CDNs, our visitors would be way more likely
+to have the common static files cached.</li>
+<li>Because of complex rendering of websites. The implications of complex
+HTML structure and CSS selectors is that rendering of a website is
+slow. KISS = Keep It Simple, Stupid.</li>
+<li>Because many web servers today are still not delivering compressed
+HTTP responses, such as <cite>GZip</cite>.</li>
+<li>Because many webdevelopers don't understand the implications of using
+slow third party assets. Yes, I'm looking at you Analytics and Ad
+Companies! Slow assets gives website visitors the feeling that the
+website is not done loading when 99% of the assets really are.</li>
+<li>Because many webdevelopers still are using JavaScript when they don't
+have to. CSS3 can animate and allow for simple logic without
+JavaScript.</li>
+<li>Because we are sending cookies for a lot of content that does not
+require cookes.</li>
+<li>Because HTML is larger that it needs to be. Reusing CSS classes
+reduces the size of HTML to be fetched.</li>
+<li>Because images are sent when they really could be emulated using CSS.
+This is a thing of the past that still bugs me.</li>
+</ul>
+<p>Google's networking protocol <a class="reference external" href="https://en.wikipedia.org/wiki/SPDY">SPDY</a> aims to solve some of these issues
+and make the web faster.</p>
+<p>Did I miss something? Feel free to comment below!</p>
+
+
+		<div id="article_meta">
+							Category:
+					<a href="http://jensrantil.github.io/category/misc.html">misc</a>
+										<br />Tags:
+									<a href="http://jensrantil.github.io/tag/web.html">web</a>
+									<a href="http://jensrantil.github.io/tag/http.html">http</a>
+									</div>
+	</article>
+
+	<div class="donations">
+		Dude, did you like this blog post? Feel free to
+		drop me some bitcoins on
+		<a href="bitcoin:1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v">1Q79HGDF3ZjfCwXLAW6e7gX4DeDu2GtZ7v</a>.
+	</div>
+
+	<footer>
+		<a href="http://jensrantil.github.io/" class="button_accent">&larr;&nbsp;&nbsp;&nbsp;Back to blog</a>
+	</footer>
+
+		<div id="comments">
+		<h2>Comments</h2>
+		<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_identifier = "why-the-web-is-so-slow.html";
+			(function() {
+				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+				dsq.src = 'http://jensrantil.disqus.com/embed.js';
+				(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+		<noscript>Please enable JavaScript to view <a href="http://disqus.com/?ref_noscript">comments</a>.</noscript>
+	</div>
+	
+	</section>
+
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+		try {
+			var pageTracker = _gat._getTracker("UA-40929103-1");
+			pageTracker._trackPageview();
+		} catch(err) {}</script>
+</body>
+</html>
