@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2014-03-17T22:46:00+01:00</updated><entry><title>Salt vs. Ansible</title><link href="http://jensrantil.github.io/salt-vs-ansible.html" rel="alternate"></link><updated>2014-03-17T22:46:00+01:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2014-03-17:salt-vs-ansible.html</id><summary type="html">&lt;p&gt;Recently I was set to evaluate configuration management systems. I've
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jens Rantil's Hideout</title><link href="http://jensrantil.github.io/" rel="alternate"></link><link href="http://jensrantil.github.io/feeds/all.atom.xml" rel="self"></link><id>http://jensrantil.github.io/</id><updated>2014-03-18T07:46:00+01:00</updated><entry><title>A follow-up on CouchDB as event store</title><link href="http://jensrantil.github.io/a-follow-up-on-couchdb-as-event-store.html" rel="alternate"></link><updated>2014-03-18T07:46:00+01:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2014-03-18:a-follow-up-on-couchdb-as-event-store.html</id><summary type="html"></summary><category term="CouchDB"></category><category term="cqrs"></category><category term="distributed-architecture"></category></entry><entry><title>Salt vs. Ansible</title><link href="http://jensrantil.github.io/salt-vs-ansible.html" rel="alternate"></link><updated>2014-03-17T22:46:00+01:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2014-03-17:salt-vs-ansible.html</id><summary type="html">&lt;p&gt;Some time ago was set to evaluate configuration management systems. I've
 heard opinions from someone I respect that &lt;a class="reference external" href="http://puppetlabs.com"&gt;Puppet&lt;/a&gt; and &lt;a class="reference external" href="http://www.getchef.com"&gt;Chef&lt;/a&gt; were
 complicated beasts to get up and running, and since I am a Python guy
 I've generally always kept an eye on &lt;a class="reference external" href="http://www.ansible.com"&gt;Ansible&lt;/a&gt; and &lt;a class="reference external" href="http://www.saltstack.com"&gt;Salt&lt;/a&gt;. Ruby is so far
@@ -10,15 +10,15 @@ project, Ansible was mostly chosen because it was easy to get started
 and had good documentation. The team I was working with was especially
 fond of the &lt;a class="reference external" href="http://docs.ansible.com/playbooks_best_practices.html"&gt;Best Practises&lt;/a&gt; documentation which got us started quickly
 and taught us what structure had worked previously.&lt;/p&gt;
-&lt;p&gt;Three weeks ago I went on a 10-day vacation in Japan, and for those who
-don't know me that usually equals me spending a fair amount of time of
-reading computer literature or documentation! Inbetween great sushi,
-Tokyo skylines, amazing skiing and rough flue I found &lt;a class="reference external" href="https://media.readthedocs.org/pdf/salt/latest/salt.pdf"&gt;the Salt
+&lt;p&gt;A couple of weeks ago I went on a 10-day vacation in Japan, and for
+those who don't know me that usually equals me spending a fair amount of
+time of reading computer literature or documentation! Inbetween great
+sushi, Tokyo skylines, amazing skiing and a rough flue I found &lt;a class="reference external" href="https://media.readthedocs.org/pdf/salt/latest/salt.pdf"&gt;the Salt
 PDF-documentation&lt;/a&gt; to be great leisure!&lt;/p&gt;
-&lt;p&gt;I've also spent some time getting a Salt setup up and running with their
-&lt;a class="reference external" href="http://docs.saltstack.com/topics/tutorials/starting_states.html"&gt;States&lt;/a&gt; system. Since I now feel like I have a pretty robust background
-in both systems, I feel obliged to make a highly opinionated comparison.
-Let's go:&lt;/p&gt;
+&lt;p&gt;I've also spent some time getting a small Salt setup up and running with
+their &lt;a class="reference external" href="http://docs.saltstack.com/topics/tutorials/starting_states.html"&gt;States&lt;/a&gt; system. Since I now feel like I have a pretty robust
+background in both systems, I feel obliged to make a highly opinionated
+comparison.  Let's go:&lt;/p&gt;
 &lt;div class="section" id="terminology"&gt;
 &lt;h2&gt;Terminology&lt;/h2&gt;
 &lt;p&gt;Both Salt and Ansible are originally built as execution engines. That
@@ -256,9 +256,9 @@ most of them have been fixed.&lt;/p&gt;
 &lt;p&gt;To me, Ansible was a great introduction to automated server
 configuration and deployment. It was easy to get up and running and has
 great documentation.&lt;/p&gt;
-&lt;p&gt;Moving forward, the scalability, speed and architecture of Salt suits my new
-project better. For cloud deployments I find the Salt architecture to be
-a better fit. I'm happy with my choice.&lt;/p&gt;
+&lt;p&gt;Moving forward, the scalability, speed and architecture of Salt has it
+going for it. For cloud deployments I find the Salt architecture to be
+a better fit. I would not hesitate to use Salt in the future.&lt;/p&gt;
 &lt;p&gt;All this said, you should give both projects a spin before making your
 decision. They're fairly quick to set up and test.&lt;/p&gt;
 &lt;/div&gt;
@@ -819,7 +819,7 @@ doable with correct authorization it would allow some cool stuff such as
 fully hosting event stored applications in CouchDB, possibly together
 with &lt;a class="reference external" href="http://pouchdb.com"&gt;PouchDB&lt;/a&gt;.&lt;/p&gt;
 &lt;/div&gt;
-</summary><category term="cqrs"></category><category term="distributed-architecture"></category></entry><entry><title>Java's missing optional keyword and the issues of null</title><link href="http://jensrantil.github.io/javas-missing-optional-keyword-and-the-issues-of-null.html" rel="alternate"></link><updated>2013-08-22T00:52:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-22:javas-missing-optional-keyword-and-the-issues-of-null.html</id><summary type="html">&lt;p&gt;One of my pet peaves when it comes to the Java programming languages [1]
+</summary><category term="cqrs"></category><category term="distributed-architecture"></category><category term="CouchDB"></category></entry><entry><title>Java's missing optional keyword and the issues of null</title><link href="http://jensrantil.github.io/javas-missing-optional-keyword-and-the-issues-of-null.html" rel="alternate"></link><updated>2013-08-22T00:52:00+02:00</updated><author><name>Jens Rantil</name></author><id>tag:jensrantil.github.io,2013-08-22:javas-missing-optional-keyword-and-the-issues-of-null.html</id><summary type="html">&lt;p&gt;One of my pet peaves when it comes to the Java programming languages [1]
 is that it does not do enough &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Type_safety"&gt;type safety&lt;/a&gt;. The issue is, simply, that
 programmers tend to believe that Java infers more safety than it
 actually does. The biggest reason for this can be summarized in one
