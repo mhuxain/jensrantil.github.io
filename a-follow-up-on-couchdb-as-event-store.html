@@ -41,21 +41,47 @@
 	<section id="posts">
 			<header>
 		<h1>Jens Rantil's blog</h1>
-		<h3>Posted Tis 18 Mars 2014</h3>
+		<h3>Posted Tis 25 Mars 2014</h3>
 	</header>
 	<article>
 		<h1 id="title">
 			<a href="http://jensrantil.github.io/a-follow-up-on-couchdb-as-event-store.html" rel="bookmark"
 				title="Permalink to A follow-up on CouchDB as event store">A follow-up on CouchDB as event store</a>
 		</h1>
-		<p>I <a href="#id1"><span class="problematic" id="id2">recently_</span></a> wrote about using CouchDB as an event store. One issue that
-I mentioned briefly was that my setup would</p>
-<div class="system-messages section">
-<h2>Docutils System Messages</h2>
-<div class="system-message" id="id1">
-<p class="system-message-title">System Message: ERROR/3 (<tt class="docutils">/Users/jens/Development/src/pelican/content/content/follow-up-on-couchdb-as-eventstore.rst</tt>, line 9); <em><a href="#id2">backlink</a></em></p>
-Unknown target name: &quot;recently&quot;.</div>
-</div>
+		<p>I <a class="reference external" href="http://jensrantil.github.io/bootstrapping-couchdb-as-event-store.html">recently</a> wrote about using CouchDB as an event store. One issue that
+I mentioned briefly was that my proposed solution would not work for a
+single aggregate root yielding multiple key/values in a CouchDB view:</p>
+<blockquote>
+What a view cannot do is keep track of older versions of an
+aggregate root.</blockquote>
+<p>Recently I've been revisiting this problem (because I find it fun to
+think about) and have a slightly different solution to propose, namely
+to store all events for a single aggregate in a single document. That
+is, make the document have a list of events. This will solve all
+previous requirements as well as:</p>
+<ul class="simple">
+<li>Support versioning of aggregates in a single CouchDB view.</li>
+<li>Support generating multiple key/values for a single aggregate root.</li>
+<li>Make conflict resolution easier to deal with and reason about.</li>
+</ul>
+<p>One argument against this solution is that CouchDB does not support
+atomic document modifications. This means that a user would have to
+first <tt class="docutils literal">GET</tt> the document (with all events), append the new event and
+then write the new document (<tt class="docutils literal">PUT</tt>). With aggregate roots that has a lot of
+events this would yield a great overhead in network latencies and storage
+(since CouchDB is an append only database).</p>
+<p>Good news is CouchDB has <a class="reference external" href="https://wiki.apache.org/couchdb/Document_Update_Handlers">update handlers</a> that can be used to avoid
+the extra HTTP roundtrip. An update handler lets you can define a URL
+that you make a single post to. The handler will append the new event to
+the list and store the updated document.</p>
+<p>I've heard somewhere that giant lists in a single CouchDB document is
+not recommended. I wouldn't dismiss this idea because of that. In many
+domains there aren't that many changes to an aggregate root after
+creation. Imagine an adressbook contact as an aggregate root. I don't
+think I've ever made more than ten changes to a contact. At the same
+time, this CouchDB solution for storing event sourced aggregate roots
+would probably not be viable if you had 10^6 changes to an aggregate
+root...</p>
 
 
 		<div id="article_meta">
